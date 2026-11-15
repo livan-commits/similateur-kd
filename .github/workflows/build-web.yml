@@ -50,6 +50,15 @@ jobs:
           target: esp32c5
           command: bash tools/build_c5.sh
 
+      - name: Merge standalone ESP32-C5 flash image for the Android dual-chip runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd upstream/build_c5
+          python -m esptool --chip esp32c5 merge-bin -o kode-c5-flash.bin -f raw @flash_args
+          test -s kode-c5-flash.bin
+          ls -lh kode-c5-flash.bin
+
       - name: Enable the real KGUI framebuffer without physical MIPI-DSI
         run: python3 patches/headless_display.py upstream
 
@@ -169,9 +178,11 @@ jobs:
         run: |
           mkdir -p dist/firmware
           cp upstream/build/kodeos-flash.bin dist/firmware/
+          cp upstream/build_c5/kode-c5-flash.bin dist/firmware/c5-flash.bin
           cp framebuffer-symbols.json dist/framebuffer-symbols.json
           cp web/index.html dist/index.html
           cp web/kodeos-worker.js dist/kodeos-worker.js
+          cp web/c5-worker.js dist/c5-worker.js
           touch dist/.nojekyll
 
       - name: Write source manifest
@@ -208,7 +219,7 @@ jobs:
           assert symbols["bytes_per_pixel"] == 2 and symbols["max_read_bytes"] == 4096
           for key in ("front_pointer_address", "sequence_address", "dirty_y1_address", "dirty_y2_address"):
               assert int(symbols[key], 16) > 0
-          for name in ("framebuffer-symbols.json", "index.html", "kodeos-worker.js", "versions.json", "firmware/kodeos-flash.bin", "esp-emu/index.html", "esp-emu/app.js", "esp-emu/worker.js", "esp-emu/pkg/esp_emu.js", "esp-emu/pkg/esp_emu_bg.wasm", "esp-emu/cosim.js", "esp-emu/part-worker.js", "esp-emu/vendor/esp_cosim_pb.js", "esp-emu/parts/kode_board.wasm"):
+          for name in ("framebuffer-symbols.json", "index.html", "kodeos-worker.js", "versions.json", "firmware/kodeos-flash.bin", "firmware/c5-flash.bin", "c5-worker.js", "esp-emu/index.html", "esp-emu/app.js", "esp-emu/worker.js", "esp-emu/pkg/esp_emu.js", "esp-emu/pkg/esp_emu_bg.wasm", "esp-emu/cosim.js", "esp-emu/part-worker.js", "esp-emu/vendor/esp_cosim_pb.js", "esp-emu/parts/kode_board.wasm"):
               path = Path("dist") / name
               assert path.is_file() and path.stat().st_size > 0, name
               print(f"OK {path} ({path.stat().st_size} bytes)")
