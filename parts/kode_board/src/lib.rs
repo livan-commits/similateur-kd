@@ -350,4 +350,50 @@ mod tests {
         assert!(board.poll(PRESS_NS + 1).is_some());
         assert_eq!(board.tca_input, 0xFF);
     }
+
+    #[test]
+    fn bot_and_left_can_be_held_together_for_a_long_press() {
+        let mut board = KodeBoard::default();
+        let combo = (1 << 0) | (1 << 2);
+
+        board.on_input("button:bot:down");
+        board.on_input("button:left:down");
+        assert_eq!(board.tca_input & combo, 0);
+
+        // More than two seconds of emulated time must not auto-release held keys.
+        board.poll(PRESS_NS * 40);
+        assert_eq!(board.tca_input & combo, 0);
+
+        board.on_input("button:bot:up");
+        assert_ne!(board.tca_input & (1 << 0), 0);
+        assert_eq!(board.tca_input & (1 << 2), 0);
+
+        board.on_input("button:left:up");
+        assert_eq!(board.tca_input & combo, combo);
+    }
+
+    #[test]
+    fn short_button_tap_does_not_release_another_held_button() {
+        let mut board = KodeBoard::default();
+        board.on_input("button:bot:down");
+        board.on_input("button:left");
+        board.poll(0);
+        board.poll(PRESS_NS + 1);
+
+        assert_eq!(board.tca_input & (1 << 0), 0);
+        assert_ne!(board.tca_input & (1 << 2), 0);
+    }
+
+    #[test]
+    fn held_top_key_is_not_auto_released() {
+        let mut board = KodeBoard::default();
+        board.on_input("button:top:down");
+        board.poll(PRESS_NS * 40);
+        assert!(!board.top_high);
+
+        board.on_input("button:top:up");
+        board.poll(PRESS_NS * 40 + 1);
+        assert!(board.top_high);
+    }
+
 }
