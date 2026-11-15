@@ -327,10 +327,12 @@ jobs:
           node-version: 22
 
       - name: Install Electron packaging dependencies
-        run: npm install --no-audit --no-fund --prefix desktop
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
 
       - name: Build Windows installer and portable executable
-        run: npm run dist:win --prefix desktop
+        working-directory: desktop
+        run: npm run dist:win
 
       - name: Upload Windows simulator packages
         uses: actions/upload-artifact@v4
