@@ -1,4 +1,5 @@
 const { app, BrowserWindow, protocol, session } = require("electron");
+const fsSync = require("node:fs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 
@@ -116,11 +117,19 @@ function verifyOfflineBoot(window) {
       finished = true;
       clearInterval(pollTimer);
       clearTimeout(timeoutTimer);
-      console.log("WINDOWS_OFFLINE_SMOKE " + JSON.stringify({
+      const result = {
         result: code === 0 ? "passed" : "failed",
         externalRequestCount,
         ...detail
-      }));
+      };
+      console.log("WINDOWS_OFFLINE_SMOKE " + JSON.stringify(result));
+      if (process.env.KD_SMOKE_RESULT_FILE) {
+        try {
+          fsSync.writeFileSync(process.env.KD_SMOKE_RESULT_FILE, JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error("Impossible d'écrire le résultat du contrôle :", error);
+        }
+      }
       app.exit(code);
       resolve();
     };
@@ -176,6 +185,17 @@ function verifyOfflineBoot(window) {
 
 app.whenReady().then(createWindow).catch((error) => {
   console.error("Impossible de démarrer le simulateur Kode Dot :", error);
+  if (smokeTest && process.env.KD_SMOKE_RESULT_FILE) {
+    try {
+      fsSync.writeFileSync(process.env.KD_SMOKE_RESULT_FILE, JSON.stringify({
+        result: "failed",
+        reason: error?.stack || String(error),
+        externalRequestCount
+      }, null, 2));
+    } catch {}
+    app.exit(1);
+    return;
+  }
   app.quit();
 });
 

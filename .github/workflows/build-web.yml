@@ -355,13 +355,25 @@ jobs:
         shell: pwsh
         run: |
           $env:KD_SMOKE_TEST = "1"
+          $resultFile = Join-Path $env:RUNNER_TEMP "kode-dot-offline-smoke.json"
+          $env:KD_SMOKE_RESULT_FILE = $resultFile
           $app = Join-Path (Get-Location) "dist-windows/win-unpacked/Simulateur Kode Dot.exe"
           if (-not (Test-Path -LiteralPath $app -PathType Leaf)) {
             throw "L'application Windows décompressée est introuvable : $app"
           }
-          & $app
-          $exitCode = $LASTEXITCODE
+          $process = Start-Process -FilePath $app -Wait -PassThru -WindowStyle Hidden
+          $exitCode = $process.ExitCode
+          if (Test-Path -LiteralPath $resultFile -PathType Leaf) {
+            Get-Content -LiteralPath $resultFile
+            $smoke = Get-Content -LiteralPath $resultFile -Raw | ConvertFrom-Json
+            if ($smoke.result -ne "passed") {
+              throw "Le contrôle hors ligne a échoué : $($smoke.reason)"
+            }
+          } else {
+            throw "L'application n'a produit aucun résultat de contrôle hors ligne."
+          }
           Remove-Item Env:\KD_SMOKE_TEST
+          Remove-Item Env:\KD_SMOKE_RESULT_FILE
           if ($exitCode -ne 0) {
             throw "Le contrôle de démarrage hors ligne a échoué (code $exitCode)."
           }
