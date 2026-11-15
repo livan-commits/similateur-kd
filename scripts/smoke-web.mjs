@@ -79,7 +79,7 @@ try {
     }, null, { timeout: 20000, polling: 250 });
     await page.waitForFunction(() => {
       const frame = document.querySelector("#frame-status")?.textContent || "";
-      const match = frame.match(/PSRAM KGUI · séquence (\\d+)/);
+      const match = frame.match(/PSRAM KGUI · séquence (\d+)/);
       return match && Number(match[1]) >= 4;
     }, null, { timeout: 45000, polling: 250 });
   } catch (error) { await diagnostics(error.message); throw error; }
