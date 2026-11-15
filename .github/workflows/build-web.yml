@@ -172,6 +172,7 @@ jobs:
         shell: bash
         run: |
           node --input-type=module --check < web/kodeos-worker.js
+          node --input-type=module --check < web/c5-worker.js
 
       - name: Prepare single-page KodeOS web emulator
         shell: bash
