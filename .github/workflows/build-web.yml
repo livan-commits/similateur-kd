@@ -351,6 +351,21 @@ jobs:
       - name: Build the Windows installer
         run: npm run build:windows
 
+      - name: Verify the packaged app boots and renders offline
+        shell: pwsh
+        run: |
+          $env:KD_SMOKE_TEST = "1"
+          $app = Join-Path (Get-Location) "dist-windows/win-unpacked/Simulateur Kode Dot.exe"
+          if (-not (Test-Path -LiteralPath $app -PathType Leaf)) {
+            throw "L'application Windows décompressée est introuvable : $app"
+          }
+          & $app
+          $exitCode = $LASTEXITCODE
+          Remove-Item Env:\KD_SMOKE_TEST
+          if ($exitCode -ne 0) {
+            throw "Le contrôle de démarrage hors ligne a échoué (code $exitCode)."
+          }
+
       - name: Verify the Windows installer exists
         shell: pwsh
         run: |
