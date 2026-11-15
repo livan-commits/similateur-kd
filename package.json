@@ -1,6 +1,6 @@
 {
   "name": "kode-dot-simulator-windows",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Simulateur Kode Dot autonome pour Windows",
   "main": "electron/main.cjs",
