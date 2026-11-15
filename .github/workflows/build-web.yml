@@ -56,7 +56,8 @@ jobs:
           set -euo pipefail
           python3 -m venv /tmp/esptool-tools
           /tmp/esptool-tools/bin/pip install --disable-pip-version-check esptool
-          /tmp/esptool-tools/bin/python -m esptool --chip esp32c5 merge-bin -o /tmp/kode-c5-flash.bin -f raw @upstream/build_c5/flash_args
+          cd upstream/build_c5
+          /tmp/esptool-tools/bin/python -m esptool --chip esp32c5 merge-bin -o /tmp/kode-c5-flash.bin -f raw @flash_args
           test -s /tmp/kode-c5-flash.bin
           ls -lh /tmp/kode-c5-flash.bin
 
