@@ -7,6 +7,6 @@ contextBridge.exposeInMainWorld("kodeDotSD", Object.freeze({
   open: () => ipcRenderer.invoke("sd:open"),
   loadFlash: () => ipcRenderer.invoke("flash:load"),
   saveFlash: (bytes, firmwareHash) => ipcRenderer.invoke("flash:save", bytes, firmwareHash),
-  onSaveFlash: (callback) => ipcRenderer.on("app:save-flash", callback),
+  onSaveFlash: (callback) => ipcRenderer.on("app:save-flash", () => callback()),
   flashSaved: () => ipcRenderer.send("app:flash-saved")
 }));
