@@ -213,6 +213,7 @@ jobs:
             "kodeos_sdk_commit": "1841cc8c13d4b2e3e4d7288b40cdac5de207a133",
             "renderer": "official ESP-EMU browser runtime executing pinned KodeOS ESP32-P4 firmware; real KGUI RGB565 framebuffer read directly from the firmware's PSRAM through ESP-EMU read_memory",
             "firmware": "KodeOS ESP32-P4 merged flash image including storage at 0x1800000; simulator-only headless display overlay",
+            "flash_persistence": "ESP-EMU flash_state snapshots saved locally on close and every 5 minutes; SHA-256 firmware match required; previous image retained on firmware change",
             "c5": "KodeOS-pinned ESP32-C5 firmware in firmware/c5-flash.bin; optional autonomous ESP-EMU instance; SDIO P4-C5 link not implemented",
             "esp_emu": "v1.0.0",
             "display": "410x502 RGB565 framebuffer rendered by real KGUI and polled from PSRAM by a dedicated Web Worker using ELF-exported symbols; CO5300 MIPI-DSI bypassed",
@@ -233,6 +234,7 @@ jobs:
           assert manifest["kodeos_sdk_commit"] == "1841cc8c13d4b2e3e4d7288b40cdac5de207a133"
           assert "autonomous" in manifest["c5"] and "not implemented" in manifest["c5"]
           assert "ESP-EMU" in manifest["renderer"] and "real KGUI" in manifest["renderer"]
+          assert "flash_state" in manifest["flash_persistence"] and "SHA-256" in manifest["flash_persistence"]
           symbols = json.loads(Path("dist/framebuffer-symbols.json").read_text())
           assert symbols["width"] == 410 and symbols["height"] == 502
           assert symbols["bytes_per_pixel"] == 2 and symbols["max_read_bytes"] == 4096
@@ -384,6 +386,11 @@ jobs:
             $smoke = Get-Content -LiteralPath $resultFile -Raw | ConvertFrom-Json
             if ($smoke.result -ne "passed") {
               throw "Le contrôle hors ligne a échoué : $($smoke.reason)"
+            }
+            if (-not $smoke.flashPersistence.restored -or
+                $smoke.flashPersistence.size -lt 20971520 -or
+                $smoke.flashPersistence.firmwareHash.Length -ne 64) {
+              throw "La persistance de la flash interne n'a pas été validée."
             }
           } else {
             throw "L'application n'a produit aucun résultat de contrôle hors ligne."
