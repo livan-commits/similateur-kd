@@ -106,6 +106,7 @@
         <div><small>Système</small><strong>KodeOS 0.1.1</strong></div>
         <div><small>Affichage</small><strong>Framebuffer KGUI réel</strong></div>
         <div><small>Entrées</small><strong>TCA6408A + CST820</strong></div>
+        <div><small>Coprocesseur</small><strong id="c5-status">non lancé</strong></div>
       </div>
       <h2>Journal UART0 / KodeOS</h2>
       <pre id="console" aria-live="polite"></pre>
@@ -120,6 +121,9 @@
     const ctx = canvas.getContext("2d", { alpha: false });
     const consoleBox = $("console");
     const worker = new Worker("./kodeos-worker.js", { type: "module" });
+    const localDual = new URLSearchParams(location.search).get("local-dual") === "1";
+    const c5Worker = localDual ? new Worker("./c5-worker.js", { type: "module" }) : null;
+    if (localDual) $("c5-status").textContent = "initialisation…";
 
     let running = false;
     let startRequested = false;
@@ -197,6 +201,32 @@
     function onOutput(output) {
       const text = typeof output === "string" ? output : String(output);
       for (const line of text.split(/\r?\n/)) processLine(line);
+    }
+
+    if (c5Worker) {
+      c5Worker.onmessage = (event) => {
+        const message = event.data || {};
+        if (message.type === "status") {
+          $("c5-status").textContent = "démarrage…";
+        } else if (message.type === "log") {
+          log(message.message);
+        } else if (message.type === "ready") {
+          $("c5-status").textContent = "démarré · autonome";
+          log("[C5] ESP32-C5 démarré dans une seconde instance ESP-EMU");
+          log("[C5] liaison SDIO avec le P4 non encore raccordée");
+        } else if (message.type === "uart") {
+          for (const line of String(message.data || "").split(/\r?\n/)) {
+            if (line.trim()) log("[C5 UART] " + line);
+          }
+        } else if (message.type === "error") {
+          $("c5-status").textContent = "erreur";
+          log("[C5] " + (message.message || "Erreur inconnue"));
+        }
+      };
+      c5Worker.onerror = (event) => {
+        $("c5-status").textContent = "erreur Worker";
+        log("[C5 worker] " + (event.message || "échec du Worker"));
+      };
     }
 
     function boardInput(kind) {
@@ -308,6 +338,7 @@
     });
 
     start();
+    if (c5Worker) c5Worker.postMessage({ type: "start" });
   </script>
 </body>
 </html>
