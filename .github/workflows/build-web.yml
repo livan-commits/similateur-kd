@@ -228,6 +228,14 @@ jobs:
           assert "esp-emu/index.html" not in html
           PY
 
+      - name: Publish complete offline web runtime for Android packaging
+        uses: actions/upload-artifact@v4
+        with:
+          name: kode-dot-web-dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
