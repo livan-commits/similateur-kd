@@ -45,13 +45,42 @@ function safeSdPath(name) {
 function registerSdBridge() {
   ipcMain.handle("sd:list", async () => {
     await fs.mkdir(sdRoot(), { recursive: true });
-    return (await fs.readdir(sdRoot(), { withFileTypes: true })).map(e => ({ name: e.name, directory: e.isDirectory() }));
+    const entries = [];
+    async function walk(directory, prefix = "") {
+      for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+        const relative = prefix ? prefix + "/" + entry.name : entry.name;
+        if (entry.isDirectory()) {
+          entries.push({ name: relative, directory: true });
+          if (entries.length < 2000) await walk(path.join(directory, entry.name), relative);
+        } else if (entry.isFile()) {
+          const stat = await fs.stat(path.join(directory, entry.name));
+          entries.push({ name: relative, directory: false, size: stat.size });
+        }
+        if (entries.length >= 2000) return;
+      }
+    }
+    await walk(sdRoot());
+    return entries;
   });
   ipcMain.handle("sd:write", async (_event, name, bytes) => {
     const target = safeSdPath(name);
     if (!(bytes instanceof ArrayBuffer) || bytes.byteLength > 67108864) throw new Error("Fichier invalide (limite 64 Mio)");
+    await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, Buffer.from(bytes));
     return { name, size: bytes.byteLength };
+  });
+  ipcMain.handle("sd:read", async (_event, name) => {
+    const target = safeSdPath(name);
+    const stat = await fs.stat(target);
+    if (!stat.isFile() || stat.size > 67108864) throw new Error("Fichier absent ou supérieur à 64 Mio");
+    return await fs.readFile(target);
+  });
+  ipcMain.handle("sd:delete", async (_event, name) => {
+    const target = safeSdPath(name);
+    const stat = await fs.lstat(target);
+    if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Seuls les fichiers peuvent être supprimés");
+    await fs.unlink(target);
+    return { name, deleted: true };
   });
   ipcMain.handle("sd:open", async () => {
     await fs.mkdir(sdRoot(), { recursive: true });
