@@ -1,4 +1,5 @@
-import { chromium } from "playwright";
+const playwrightModule = process.env.PLAYWRIGHT_MODULE || "playwright";
+const { chromium } = await import(playwrightModule);
 
 const target = process.env.KD_SITE_URL || "https://livan-commits.github.io/similateur-kd/";
 const browser = await chromium.launch({
