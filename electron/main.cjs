@@ -34,6 +34,8 @@ const MIME_TYPES = {
 };
 
 const sdRoot = () => path.join(app.getPath("userData"), "Carte_SD");
+const flashPath = () => path.join(app.getPath("userData"), "KodeOS_flash.bin");
+const flashMetaPath = () => path.join(app.getPath("userData"), "KodeOS_flash.json");
 function safeSdPath(name) {
   if (typeof name !== "string" || !name || name.startsWith("/") || name.includes("\\") ||
       name.split("/").some(part => !part || part === "." || part === "..")) throw new Error("Chemin SD invalide");
@@ -107,6 +109,47 @@ function registerSdBridge() {
     await shell.openPath(sdRoot());
     return sdRoot();
   });
+  ipcMain.handle("flash:load", async () => {
+    try {
+      const [bytes, metadataText] = await Promise.all([
+        fs.readFile(flashPath()),
+        fs.readFile(flashMetaPath(), "utf8")
+      ]);
+      const metadata = JSON.parse(metadataText);
+      if (bytes.length !== metadata.size ||
+          typeof metadata.firmwareHash !== "string" ||
+          !/^[a-f0-9]{64}$/.test(metadata.firmwareHash)) return null;
+      return { data: Uint8Array.from(bytes).buffer, firmwareHash: metadata.firmwareHash };
+    } catch (error) {
+      if (error.code === "ENOENT" || error instanceof SyntaxError) return null;
+      throw error;
+    }
+  });
+  ipcMain.handle("flash:save", async (_event, bytes, firmwareHash) => {
+    if (!(bytes instanceof ArrayBuffer) || bytes.byteLength < 1048576 || bytes.byteLength > 67108864) {
+      throw new Error("Image flash invalide (taille attendue entre 1 et 64 Mio)");
+    }
+    if (typeof firmwareHash !== "string" || !/^[a-f0-9]{64}$/.test(firmwareHash)) {
+      throw new Error("Empreinte du firmware invalide");
+    }
+    await fs.mkdir(path.dirname(flashPath()), { recursive: true });
+    let previousMetadata = null;
+    try { previousMetadata = JSON.parse(await fs.readFile(flashMetaPath(), "utf8")); } catch {}
+    if (previousMetadata?.firmwareHash && previousMetadata.firmwareHash !== firmwareHash) {
+      try {
+        await fs.copyFile(flashPath(), flashPath() + ".previous");
+        await fs.copyFile(flashMetaPath(), flashMetaPath() + ".previous");
+      } catch {}
+    }
+    const savedAt = new Date().toISOString();
+    const imageTemp = flashPath() + ".tmp";
+    const metadataTemp = flashMetaPath() + ".tmp";
+    await fs.writeFile(imageTemp, Buffer.from(bytes));
+    await fs.writeFile(metadataTemp, JSON.stringify({ firmwareHash, size: bytes.byteLength, savedAt }));
+    await fs.rename(imageTemp, flashPath());
+    await fs.rename(metadataTemp, flashMetaPath());
+    return { size: bytes.byteLength, savedAt };
+  });
 }
 function getSiteDirectory() {
   return app.isPackaged
@@ -179,6 +222,29 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.cjs")
     }
   });
+
+  if (!smokeTest) {
+    let closePending = false;
+    let allowClose = false;
+    let closeTimeout = null;
+    window.on("close", (event) => {
+      if (allowClose) return;
+      event.preventDefault();
+      if (closePending) return;
+      closePending = true;
+      ipcMain.once("app:flash-saved", (messageEvent) => {
+        if (messageEvent.sender !== window.webContents) return;
+        if (closeTimeout) clearTimeout(closeTimeout);
+        allowClose = true;
+        window.close();
+      });
+      window.webContents.send("app:save-flash");
+      closeTimeout = setTimeout(() => {
+        allowClose = true;
+        if (!window.isDestroyed()) window.destroy();
+      }, 15000);
+    });
+  }
 
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   await window.loadURL("kode-dot://app/index.html");
