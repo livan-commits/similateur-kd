@@ -133,3 +133,12 @@ Chaque modèle devra être vérifié par des tests unitaires sur ses transaction
 5. Trouver et construire une image flash KodeOS P4 reproductible, puis tester le démarrage.
 6. Étudier séparément DSI, I2S, SDMMC et le pont SDIO P4–C5.
 7. Ne déclarer l'émulation complète qu'après tests de boot, d'Active Objects, de services et de périphériques.
+
+
+## État du simulateur Windows hors ligne — 15 novembre 2026
+
+- Le firmware ESP32-C5 peut être lancé à la demande dans une seconde instance ESP-EMU. Cette instance reste **autonome** : aucun transport SDIO P4–C5 n'est actuellement fourni par les Virtual Parts navigateur d'ESP-EMU v1.0.0. Le bouton de démarrage ne doit donc pas être interprété comme une liaison coprocesseur fonctionnelle.
+- Le dossier `Carte_SD` persiste dans le répertoire `userData` de l'application Windows. L'interface permet maintenant l'import de fichiers ou de dossiers, l'export et la suppression ; les sous-dossiers sont conservés. Les chemins sont confinés à ce dossier et les liens symboliques sont refusés.
+- Ce stockage est une **bibliothèque de fichiers côté hôte**, pas une carte SDMMC émulée. Le firmware ESP32-P4 ne peut pas monter ni lire ces fichiers, car ESP-EMU v1.0.0 ne fournit pas d'interface SDMMC Virtual Part. Aucune image FAT n'est présentée comme montée par KodeOS.
+
+Pour raccorder réellement ces deux interfaces, il faut étendre le moteur ESP-EMU ou ajouter une couche d'émulation bas niveau testée pour SDIO/SDMMC, puis valider les transactions avec les pilotes du SDK KodeOS épinglé. Un pont UART ou un partage de fichiers côté interface ne serait pas un substitut fidèle à ces bus.
