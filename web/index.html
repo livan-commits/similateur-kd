@@ -238,6 +238,7 @@
           $("progress").style.width = "100%";
           setStatus("ESP32-P4 démarré · KodeOS en cours d’exécution", "ok");
           log("[worker] ESP32-P4 et carte I2C isolés du fil principal du navigateur");
+          if (timeSyncReady) syncTime();
           break;
         case "frame":
           try {
@@ -259,7 +260,6 @@
         case "error":
           setStatus("Erreur du simulateur", "warn");
           log(message.message || "Erreur inconnue du Worker");
-          if (!running) $("start").disabled = false;
           break;
       }
     };
@@ -267,7 +267,7 @@
     worker.onerror = (event) => {
       setStatus("Erreur du moteur ESP-EMU", "warn");
       log("[worker] " + (event.message || "échec du Worker"));
-      $("start").disabled = false;
+      $("start").disabled = true;
     };
 
     async function start() {
