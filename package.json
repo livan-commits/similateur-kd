@@ -19,6 +19,7 @@
     },
     "files": [
       "electron/main.cjs",
+      "electron/preload.cjs",
       "package.json"
     ],
     "extraResources": [
