@@ -213,7 +213,7 @@ jobs:
             "kodeos_sdk_commit": "1841cc8c13d4b2e3e4d7288b40cdac5de207a133",
             "renderer": "official ESP-EMU browser runtime executing pinned KodeOS ESP32-P4 firmware; real KGUI RGB565 framebuffer read directly from the firmware's PSRAM through ESP-EMU read_memory",
             "firmware": "KodeOS ESP32-P4 merged flash image including storage at 0x1800000; simulator-only headless display overlay",
-            "c5": "KodeOS-pinned ESP32-C5 coprocessor firmware included in storage; C5 runtime not yet separately emulated in this web build",
+            "c5": "KodeOS-pinned ESP32-C5 firmware in firmware/c5-flash.bin; optional autonomous ESP-EMU instance; SDIO P4-C5 link not implemented",
             "esp_emu": "v1.0.0",
             "display": "410x502 RGB565 framebuffer rendered by real KGUI and polled from PSRAM by a dedicated Web Worker using ELF-exported symbols; CO5300 MIPI-DSI bypassed",
             "virtual_parts": "TCA6408A at I2C 0x20 and CST820 at I2C 0x15; GPIO5 SCL, GPIO4 SDA, GPIO6 IRQ, TOP key on GPIO35"
@@ -231,6 +231,7 @@ jobs:
 
           manifest = json.loads(Path("dist/versions.json").read_text())
           assert manifest["kodeos_sdk_commit"] == "1841cc8c13d4b2e3e4d7288b40cdac5de207a133"
+          assert "autonomous" in manifest["c5"] and "not implemented" in manifest["c5"]
           assert "ESP-EMU" in manifest["renderer"] and "real KGUI" in manifest["renderer"]
           symbols = json.loads(Path("dist/framebuffer-symbols.json").read_text())
           assert symbols["width"] == 410 and symbols["height"] == 502
