@@ -182,7 +182,7 @@ jobs:
           from pathlib import Path
           import re
           html = Path("web/index.html").read_text()
-          scripts = re.findall(r"<script(?:\\s+type=[\\\"']module[\\\"'])?\\s*>(.*?)</script>", html, re.S)
+          scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, re.S)
           assert len(scripts) == 1, f"Expected one inline module script, found {len(scripts)}"
           Path("/tmp/kd-inline-ui.mjs").write_text(scripts[0])
           for marker in ('id="start-c5"', 'id="sd-download"', 'id="sd-delete"', 'webkitdirectory'):
