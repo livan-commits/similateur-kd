@@ -1,0 +1,51 @@
+{
+  "name": "kode-dot-simulator-windows",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simulateur Kode Dot autonome pour Windows",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "build:windows": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "45.3.3",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "com.kodediy.kodedot.simulator",
+    "productName": "Simulateur Kode Dot",
+    "directories": {
+      "output": "dist-windows"
+    },
+    "files": [
+      "electron/main.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "windows/site",
+        "to": "site",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Simulateur-Kode-Dot-${version}-Windows-x64-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

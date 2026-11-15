@@ -2,7 +2,7 @@ name: Build and publish KodeOS Web Emulator
 
 on:
   push:
-    branches: [main, web-framebuffer-bridge, web-psram-bridge-final]
+    branches: [main, web-framebuffer-bridge, web-psram-bridge-final, windows-offline-app]
   workflow_dispatch:
 
 permissions:
@@ -306,3 +306,64 @@ jobs:
             /tmp/kodeos-web-smoke.png
             /tmp/kodeos-web-smoke-failure.png
           if-no-files-found: ignore
+
+  windows-package:
+    if: ${{ always() && needs.build.result == 'success' && (needs.smoke.result == 'success' || needs.smoke.result == 'skipped') }}
+    runs-on: windows-latest
+    timeout-minutes: 20
+    needs: [build, smoke]
+    steps:
+      - name: Checkout this project
+        uses: actions/checkout@v4
+
+      - name: Download the complete offline simulator
+        uses: actions/download-artifact@v4
+        with:
+          name: kode-dot-web-dist
+          path: windows/site
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Verify all offline runtime files are present
+        shell: pwsh
+        run: |
+          $required = @(
+            "windows/site/index.html",
+            "windows/site/firmware/kodeos-flash.bin",
+            "windows/site/firmware/c5-flash.bin",
+            "windows/site/esp-emu/pkg/esp_emu_bg.wasm",
+            "windows/site/esp-emu/parts/kode_board.wasm",
+            "windows/site/kodeos-worker.js",
+            "windows/site/framebuffer-symbols.json"
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
+              throw "Fichier hors ligne manquant : $file"
+            }
+          }
+
+      - name: Install the pinned Windows packaging tools
+        run: npm install --no-audit --no-fund
+
+      - name: Build the Windows installer
+        run: npm run build:windows
+
+      - name: Verify the Windows installer exists
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath "dist-windows" -Filter "*.exe" -File | Select-Object -First 1
+          if (-not $installer -or $installer.Length -le 0) {
+            throw "L'installateur Windows n'a pas été généré."
+          }
+          Get-Item -LiteralPath $installer.FullName | Select-Object FullName, Length
+
+      - name: Publish the Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: kode-dot-windows-installer
+          path: dist-windows/*.exe
+          if-no-files-found: error
+          retention-days: 14
