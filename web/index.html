@@ -98,6 +98,7 @@
       <div class="actions">
         <button id="start" class="primary">Démarrer KodeOS</button>
         <button id="sync" disabled>Synchroniser l’heure</button>
+        <button id="start-c5">Démarrer le C5 (test isolé)</button>
       </div>
       <div class="status"><span id="status-dot" class="dot"></span><span id="status">Initialisation en attente</span></div>
       <div class="progress"><span id="progress"></span></div>
@@ -112,11 +113,14 @@
       <div class="actions">
         <button id="sd-open">Ouvrir le dossier Carte_SD</button>
         <button id="sd-refresh">Actualiser</button>
-        <label class="download" for="sd-upload" style="cursor:pointer">Importer un fichier</label>
-        <input id="sd-upload" type="file" hidden>
+        <label class="download" for="sd-upload" style="cursor:pointer">Importer fichiers / dossier</label>
+        <input id="sd-upload" type="file" multiple webkitdirectory hidden>
+        <button id="sd-download">Exporter le fichier choisi</button>
+        <button id="sd-delete">Supprimer le fichier choisi</button>
       </div>
-      <pre id="sd-files" style="height:100px">Carte SD prête à initialiser…</pre>
-      <p class="hint">Stockage persistant sur ce PC, utilisable hors ligne. Ce dossier hôte n'est pas encore raccordé au pilote SDMMC du firmware ESP32.</p>
+      <select id="sd-files" size="6" aria-label="Contenu de la carte SD virtuelle" style="width:100%;background:#0d0e11;color:#d0d7df;border:1px solid #343840;border-radius:10px;padding:8px"></select>
+      <p class="hint">Stockage persistant local : import de fichiers ou dossiers, export et suppression. Il reste un dossier hôte Windows ; le pilote SDMMC du firmware n’y accède pas encore.</p>
+      <p class="hint">Le C5 peut être démarré séparément pour tester son firmware, mais il n’est pas encore relié au P4 par SDIO.</p>
       <h2>Journal UART0 / KodeOS</h2>
       <pre id="console" aria-live="polite"></pre>
       <p class="hint">Le firmware officiel est chargé dans ESP-EMU. L’horloge reçoit l’heure UTC du navigateur ; l’écran lit directement le framebuffer RGB565 en PSRAM.</p>
@@ -130,33 +134,51 @@
     const ctx = canvas.getContext("2d", { alpha: false });
     const consoleBox = $("console");
     const sdFiles = $("sd-files");
+    let sdEntries = [];
     async function refreshSd() {
-      if (!window.kodeDotSD) { sdFiles.textContent = "Disponible dans l’application Windows."; return; }
+      if (!window.kodeDotSD) return;
       try {
-        const entries = await window.kodeDotSD.list();
-        sdFiles.textContent = entries.length ? entries.map(e => (e.directory ? "[dossier] " : "[fichier] ") + e.name).join("\n") : "Carte SD vide.";
-      } catch (error) { sdFiles.textContent = "Erreur SD : " + error.message; }
+        sdEntries = (await window.kodeDotSD.list()).filter(entry => !entry.directory);
+        sdFiles.replaceChildren();
+        for (const entry of sdEntries) {
+          const option = document.createElement("option");
+          option.value = entry.name;
+          option.textContent = entry.name + " · " + (entry.size || 0).toLocaleString("fr-FR") + " octets";
+          sdFiles.append(option);
+        }
+        if (!sdEntries.length) { const option = document.createElement("option"); option.textContent = "Carte SD vide"; option.disabled = true; sdFiles.append(option); }
+      } catch (error) { sdFiles.replaceChildren(); const option = document.createElement("option"); option.textContent = "Erreur SD : " + error.message; sdFiles.append(option); }
     }
     $("sd-open").addEventListener("click", async () => {
       try { log("[SD] " + await window.kodeDotSD.open()); } catch (error) { log("[SD] " + error.message); }
     });
     $("sd-refresh").addEventListener("click", refreshSd);
     $("sd-upload").addEventListener("change", async event => {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
+      const files = Array.from(event.target.files || []);
       try {
-        await window.kodeDotSD.write(file.name, await file.arrayBuffer());
-        log("[SD] Fichier enregistré : " + file.name);
+        for (const file of files) await window.kodeDotSD.write(file.webkitRelativePath || file.name, await file.arrayBuffer());
+        log("[SD] " + files.length + " fichier(s) importé(s)");
         await refreshSd();
       } catch (error) { log("[SD] Import impossible : " + error.message); }
       event.target.value = "";
     });
+    $("sd-download").addEventListener("click", async () => {
+      const name = sdFiles.value; if (!name || !window.kodeDotSD) return;
+      try {
+        const bytes = await window.kodeDotSD.read(name);
+        const url = URL.createObjectURL(new Blob([bytes]));
+        const link = document.createElement("a"); link.href = url; link.download = name.split("/").pop(); link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000); log("[SD] Export : " + name);
+      } catch (error) { log("[SD] Export impossible : " + error.message); }
+    });
+    $("sd-delete").addEventListener("click", async () => {
+      const name = sdFiles.value; if (!name || !window.kodeDotSD) return;
+      try { await window.kodeDotSD.delete(name); log("[SD] Fichier supprimé : " + name); await refreshSd(); }
+      catch (error) { log("[SD] Suppression impossible : " + error.message); }
+    });
     refreshSd();
     const worker = new Worker("./kodeos-worker.js", { type: "module" });
-    const localDual = new URLSearchParams(location.search).get("local-dual") === "1";
-    const c5Worker = localDual ? new Worker("./c5-worker.js", { type: "module" }) : null;
-    if (localDual) $("c5-status").textContent = "initialisation…";
-
+    let c5Worker = null;
     let running = false;
     let startRequested = false;
     let timeTimer = null;
@@ -246,7 +268,11 @@
       for (const line of text.split(/\r?\n/)) processLine(line);
     }
 
-    if (c5Worker) {
+    function startC5() {
+      if (c5Worker) return;
+      $("start-c5").disabled = true;
+      $("c5-status").textContent = "initialisation…";
+      c5Worker = new Worker("./c5-worker.js", { type: "module" });
       c5Worker.onmessage = (event) => {
         const message = event.data || {};
         if (message.type === "status") {
@@ -254,23 +280,26 @@
         } else if (message.type === "log") {
           log(message.message);
         } else if (message.type === "ready") {
-          $("c5-status").textContent = "démarré · autonome";
+          $("c5-status").textContent = "actif · isolé du P4";
           log("[C5] ESP32-C5 démarré dans une seconde instance ESP-EMU");
-          log("[C5] liaison SDIO avec le P4 non encore raccordée");
+          log("[C5] test autonome uniquement : liaison SDIO P4–C5 non implémentée");
         } else if (message.type === "uart") {
           for (const line of String(message.data || "").split(/\r?\n/)) {
             if (line.trim()) log("[C5 UART] " + line);
           }
         } else if (message.type === "error") {
           $("c5-status").textContent = "erreur";
+          $("start-c5").disabled = false; c5Worker = null;
           log("[C5] " + (message.message || "Erreur inconnue"));
         }
       };
       c5Worker.onerror = (event) => {
         $("c5-status").textContent = "erreur Worker";
+        $("start-c5").disabled = false; c5Worker = null;
         log("[C5 worker] " + (event.message || "échec du Worker"));
       };
     }
+    $("start-c5").addEventListener("click", startC5);
 
     function boardInput(kind) {
       worker.postMessage({ type: "board-input", kind });
@@ -381,7 +410,6 @@
     });
 
     start();
-    if (c5Worker) c5Worker.postMessage({ type: "start" });
   </script>
 </body>
 </html>
