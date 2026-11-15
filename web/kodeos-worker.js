@@ -235,7 +235,7 @@ onmessage = (event) => {
     } else if (message.type === "uart" && emulator) {
       sendUart(message.data || "");
     } else if (message.type === "sync-time" && emulator) {
-      const isoUtc = String(message.iso || new Date().toISOString()).slice(0, 20);
+      const isoUtc = String(message.iso || new Date().toISOString()).slice(0, 19);
       sendUart('time set="' + isoUtc + '"\n');
       sendUart("time\n");
     } else if (message.type === "board-input" && boardWorker) {
