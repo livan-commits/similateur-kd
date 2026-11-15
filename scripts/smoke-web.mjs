@@ -15,7 +15,7 @@ const mimeTypes = {
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://127.0.0.1").pathname);
-    const relative = pathname.replace(/^\\/+/, "") || "index.html";
+    const relative = (pathname.startsWith("/") ? pathname.slice(1) : pathname) || "index.html";
     const file = path.resolve(siteRoot, relative);
     const rel = path.relative(siteRoot, file);
     if (rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("Invalid path");
@@ -130,8 +130,8 @@ try {
     let nonBlackPixels = 0;
     for (let i = 0; i < data.length; i += 4) if (data[i] || data[i + 1] || data[i + 2]) nonBlackPixels++;
     const output = document.querySelector("#console")?.textContent || "";
-    const guiLine = output.split(/\\r?\\n/).find(line => line.includes(">|gui state=")) || "";
-    const stateLine = output.split(/\\r?\\n/).find(line => line.includes(">|state=")) || "";
+    const guiLine = output.split("\n").find(line => line.includes(">|gui state=")) || "";
+    const stateLine = output.split("\n").find(line => line.includes(">|state=")) || "";
     return { width: canvas.width, height: canvas.height, nonBlackPixels,
       status: document.querySelector("#status")?.textContent || "",
       frame: document.querySelector("#frame-status")?.textContent || "",
