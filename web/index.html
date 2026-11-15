@@ -189,6 +189,7 @@
     let flashCloseRequested = false;
     let flashCloseAcked = false;
     let flashSaveChain = Promise.resolve();
+    let flashSaveRequestResolvers = [];
 
     const fallbackImage = ctx.createImageData(410, 502);
     const fallbackPixels32 = new Uint32Array(fallbackImage.data.buffer);
@@ -327,15 +328,41 @@
       window.kodeDotSD.flashSaved();
     }
 
+    function settleFlashSaveRequests(result) {
+      const pending = flashSaveRequestResolvers.splice(0);
+      for (const resolve of pending) resolve(result);
+    }
+
+    function requestFlashSnapshot() {
+      return new Promise(resolve => {
+        flashSaveRequestResolvers.push(resolve);
+        worker.postMessage({ type: "export-flash" });
+        setTimeout(() => {
+          const index = flashSaveRequestResolvers.indexOf(resolve);
+          if (index !== -1) {
+            flashSaveRequestResolvers.splice(index, 1);
+            resolve({ saved: false, reason: "Délai dépassé pendant l'export de la flash." });
+          }
+        }, 30000);
+      });
+    }
+    window.__kodeDotRequestFlashSnapshot = requestFlashSnapshot;
+
     function queueFlashSave(message) {
-      if (!window.kodeDotSD?.saveFlash) return;
+      if (!window.kodeDotSD?.saveFlash) {
+        settleFlashSaveRequests({ saved: false, reason: "Pont de stockage indisponible." });
+        return;
+      }
       flashSaveChain = flashSaveChain.then(async () => {
         const result = await window.kodeDotSD.saveFlash(message.data, message.firmwareHash);
         worker.postMessage({ type: "flash-saved", hash: message.hash });
         log("[flash] Mémoire interne sauvegardée (" + Math.round(result.size / 1048576) + " Mio)");
+        settleFlashSaveRequests({ saved: true, size: result.size });
       }).catch(error => {
         worker.postMessage({ type: "flash-save-failed", hash: message.hash });
-        log("[flash] Sauvegarde impossible : " + (error?.message || error));
+        const reason = error?.message || String(error);
+        log("[flash] Sauvegarde impossible : " + reason);
+        settleFlashSaveRequests({ saved: false, reason });
       });
       if (flashCloseRequested) flashSaveChain.finally(acknowledgeFlashClose);
     }
@@ -397,7 +424,11 @@
           queueFlashSave(message);
           break;
         case "flash-unchanged":
+          settleFlashSaveRequests({ saved: false, unchanged: true });
+          if (flashCloseRequested) flashSaveChain.finally(acknowledgeFlashClose);
+          break;
         case "flash-pending":
+          settleFlashSaveRequests({ saved: false, reason: "Une sauvegarde flash est déjà en cours." });
           if (flashCloseRequested) flashSaveChain.finally(acknowledgeFlashClose);
           break;
         case "error":
