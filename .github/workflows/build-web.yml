@@ -54,12 +54,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd upstream/build_c5
           python3 -m venv /tmp/esptool-tools
           /tmp/esptool-tools/bin/pip install --disable-pip-version-check esptool
-          /tmp/esptool-tools/bin/python -m esptool --chip esp32c5 merge-bin -o kode-c5-flash.bin -f raw @flash_args
-          test -s kode-c5-flash.bin
-          ls -lh kode-c5-flash.bin
+          /tmp/esptool-tools/bin/python -m esptool --chip esp32c5 merge-bin -o /tmp/kode-c5-flash.bin -f raw @upstream/build_c5/flash_args
+          test -s /tmp/kode-c5-flash.bin
+          ls -lh /tmp/kode-c5-flash.bin
 
       - name: Enable the real KGUI framebuffer without physical MIPI-DSI
         run: python3 patches/headless_display.py upstream
@@ -181,7 +180,7 @@ jobs:
         run: |
           mkdir -p dist/firmware
           cp upstream/build/kodeos-flash.bin dist/firmware/
-          cp upstream/build_c5/kode-c5-flash.bin dist/firmware/c5-flash.bin
+          cp /tmp/kode-c5-flash.bin dist/firmware/c5-flash.bin
           cp framebuffer-symbols.json dist/framebuffer-symbols.json
           cp web/index.html dist/index.html
           cp web/kodeos-worker.js dist/kodeos-worker.js
