@@ -42,6 +42,23 @@ function safeSdPath(name) {
   if (!target.startsWith(root + path.sep)) throw new Error("Chemin SD interdit");
   return target;
 }
+async function assertSafeSdParents(target) {
+  const root = path.resolve(sdRoot());
+  const relative = path.relative(root, target);
+  const parts = relative.split(path.sep);
+  let current = root;
+  for (const part of parts) {
+    current = path.join(current, part);
+    try {
+      const stat = await fs.lstat(current);
+      if (stat.isSymbolicLink()) throw new Error("Les liens symboliques sont interdits sur la carte SD");
+      if (current !== target && !stat.isDirectory()) throw new Error("Un élément du chemin SD n'est pas un dossier");
+    } catch (error) {
+      if (error.code === "ENOENT") break;
+      throw error;
+    }
+  }
+}
 function registerSdBridge() {
   ipcMain.handle("sd:list", async () => {
     await fs.mkdir(sdRoot(), { recursive: true });
@@ -64,6 +81,7 @@ function registerSdBridge() {
   });
   ipcMain.handle("sd:write", async (_event, name, bytes) => {
     const target = safeSdPath(name);
+    await assertSafeSdParents(target);
     if (!(bytes instanceof ArrayBuffer) || bytes.byteLength > 67108864) throw new Error("Fichier invalide (limite 64 Mio)");
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, Buffer.from(bytes));
@@ -71,12 +89,14 @@ function registerSdBridge() {
   });
   ipcMain.handle("sd:read", async (_event, name) => {
     const target = safeSdPath(name);
+    await assertSafeSdParents(target);
     const stat = await fs.stat(target);
     if (!stat.isFile() || stat.size > 67108864) throw new Error("Fichier absent ou supérieur à 64 Mio");
     return await fs.readFile(target);
   });
   ipcMain.handle("sd:delete", async (_event, name) => {
     const target = safeSdPath(name);
+    await assertSafeSdParents(target);
     const stat = await fs.lstat(target);
     if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Seuls les fichiers peuvent être supprimés");
     await fs.unlink(target);
