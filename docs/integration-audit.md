@@ -114,3 +114,12 @@ Runs déclenchés par cet épinglage :
 - [Build Web — run 43621358508](https://github.com/livan-commits/similateur-kd/actions/runs/43621358508).
 
 Au dernier contrôle consigné, les deux jobs étaient encore en cours, sans étape en échec. Le résultat final doit être mis à jour après la fin des jobs. Un build firmware réussi prouve la production d'une image, pas son démarrage dans ESP-EMU ; un build Web réussi ne prouve pas que le firmware est raccordé au rendu KGUI.
+
+
+## Mise à jour — Windows hors ligne et périphériques non raccordés (15 novembre 2026)
+
+Le paquet Windows est désormais vérifié en démarrage local sans réseau et contient le firmware P4/C5, les workers et les modules WASM. Le panneau de stockage Windows a été étendu pour gérer les fichiers et sous-dossiers de façon persistante (import, export, suppression). Il reste côté hôte : aucun montage SDMMC dans le firmware n'est revendiqué.
+
+Le C5 est démarrable à la demande dans une instance ESP-EMU séparée. Ce test autonome permet de vérifier que son image démarre, mais ne relie pas les contrôleurs SDIO des deux SoC. Le contrat Virtual Parts ESP-EMU v1.0.0 utilisé par ce projet expose GPIO, I2C et SPI, pas SDIO ni SDMMC. Le vrai raccordement exige donc une extension dédiée du moteur et des tests de protocole ; les boutons d'interface indiquent explicitement cet état.
+
+Les contrôles CI vérifient maintenant aussi la syntaxe des scripts Electron et du JavaScript intégré à la page, ainsi que la présence des commandes de gestion SD et du démarrage C5 manuel.
