@@ -5,7 +5,7 @@ const WIDTH = 410;
 const HEIGHT = 502;
 const BYTES_PER_PIXEL = 2;
 const MAX_READ_BYTES = 4096;
-const POLL_MS = 100;
+const POLL_MS = 33;
 
 const encoder = new TextEncoder();
 const framebufferBytes = new Uint8Array(WIDTH * HEIGHT * BYTES_PER_PIXEL);
