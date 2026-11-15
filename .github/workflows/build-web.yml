@@ -170,11 +170,26 @@ jobs:
           cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/kode_board.wasm" dist/esp-emu/parts/
           test -s dist/esp-emu/parts/kode_board.wasm
 
-      - name: Syntax-check the browser worker
+      - name: Syntax-check browser, Electron and inline UI JavaScript
         shell: bash
         run: |
+          set -euo pipefail
           node --input-type=module --check < web/kodeos-worker.js
           node --input-type=module --check < web/c5-worker.js
+          node --check electron/main.cjs
+          node --check electron/preload.cjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("web/index.html").read_text()
+          scripts = re.findall(r"<script(?:\\s+type=[\\\"']module[\\\"'])?\\s*>(.*?)</script>", html, re.S)
+          assert len(scripts) == 1, f"Expected one inline module script, found {len(scripts)}"
+          Path("/tmp/kd-inline-ui.mjs").write_text(scripts[0])
+          for marker in ('id="start-c5"', 'id="sd-download"', 'id="sd-delete"', 'webkitdirectory'):
+              assert marker in html, f"Missing UI feature: {marker}"
+          assert 'if (c5Worker) c5Worker.postMessage({ type: "start" })' not in html, "C5 must not start automatically"
+          PY
+          node --check /tmp/kd-inline-ui.mjs
 
       - name: Prepare single-page KodeOS web emulator
         shell: bash
