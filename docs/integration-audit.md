@@ -120,6 +120,19 @@ Au dernier contrôle consigné, les deux jobs étaient encore en cours, sans ét
 
 Le paquet Windows est désormais vérifié en démarrage local sans réseau et contient le firmware P4/C5, les workers et les modules WASM. Le panneau de stockage Windows a été étendu pour gérer les fichiers et sous-dossiers de façon persistante (import, export, suppression). Il reste côté hôte : aucun montage SDMMC dans le firmware n'est revendiqué.
 
-Le C5 est démarrable à la demande dans une instance ESP-EMU séparée. Ce test autonome permet de vérifier que son image démarre, mais ne relie pas les contrôleurs SDIO des deux SoC. Le contrat Virtual Parts ESP-EMU v1.0.0 utilisé par ce projet expose GPIO, I2C et SPI, pas SDIO ni SDMMC. Le vrai raccordement exige donc une extension dédiée du moteur et des tests de protocole ; les boutons d'interface indiquent explicitement cet état.
+Le C5 est démarrable à la demande dans une instance ESP-EMU séparée. Ce test autonome permet de vérifier que son image démarre, mais ne relie pas les contrôleurs SDIO des deux SoC. Le contrat Virtual Parts navigateur ESP-EMU v1.0.0 expose GPIO, I2C et SPI, pas SDIO ni SDMMC. À distinguer : ESP-EMU v1.0.0 documente aussi un pont SDIO natif P4–C6 via socket Unix (docs/guides/HOSTED.md), mais ce chemin n'est ni une Virtual Part WebAssembly ni la paire P4–C5 du Kode Dot. Le vrai raccordement dans l'application Windows exige une adaptation du moteur/transport et des tests de protocole.
 
 Les contrôles CI vérifient maintenant aussi la syntaxe des scripts Electron et du JavaScript intégré à la page, ainsi que la présence des commandes de gestion SD et du démarrage C5 manuel.
+
+## Rectification technique — SDIO et microSD (15 novembre 2026)
+
+L'audit des sources officielles KodeOS/SDK épinglées précise le schéma réel :
+
+- Le P4 héberge le pilote ESP-Hosted ; le C5 est le slave ESP-Hosted-MCU v2.12.9. La liaison radio P4–C5 est SDIO 4 bits.
+- Le firmware KodeOS configure le C5 en reset au démarrage (CONFIG_KODEOS_C5_HOLD=y) et le réveille via son signal enable lorsque les services radio le demandent.
+- Le SDK réserve le slot SDMMC 1 au lien ESP-Hosted C5 et le slot SDMMC 0 à la microSD physique. Les deux partagent le contrôleur matériel P4 et sont coordonnés par khal_sdmmc.
+- Le firmware du C5 configure aussi le GPIO de détection de carte et l'expandeur GPIO distant ; ce n'est pas un simple échange UART.
+
+ESP-EMU v1.0.0 a une fonctionnalité documentée --hosted pour relier un P4 à un C6 par socket Unix, en processus natifs. Cette découverte corrige l'affirmation précédente selon laquelle ESP-EMU n'aurait aucun pont SDIO. En revanche, elle ne prouve pas la compatibilité avec le slave C5 KodeDIY ni avec le build WASM utilisé dans cette application Windows.
+
+La carte Carte_SD Windows demeure actuellement un espace de fichiers hôte. Le firmware ne la monte pas. Pour la microSD, il faut un modèle de carte répondant aux commandes SDMMC sur le slot 0 et raccordé au contrôleur P4 émulé. Pour le C5, il faut d'abord valider le pont --hosted P4–C5 (ou porter son mécanisme dans le runtime WASM), en utilisant exactement les images KodeOS et C5 épinglées.
