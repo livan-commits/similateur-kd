@@ -1,7 +1,46 @@
+import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+const siteRoot = path.resolve(process.env.KD_SITE_DIR || "dist");
+const mimeTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".bin": "application/octet-stream",
+  ".css": "text/css; charset=utf-8"
+};
+const server = createServer(async (request, response) => {
+  try {
+    const pathname = decodeURIComponent(new URL(request.url, "http://127.0.0.1").pathname);
+    const relative = pathname.replace(/^\\/+/, "") || "index.html";
+    const file = path.resolve(siteRoot, relative);
+    const rel = path.relative(siteRoot, file);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("Invalid path");
+    const body = await readFile(file);
+    response.writeHead(200, {
+      "Content-Type": mimeTypes[path.extname(file).toLowerCase()] || "application/octet-stream",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "X-Content-Type-Options": "nosniff"
+    });
+    response.end(body);
+  } catch {
+    response.writeHead(404);
+    response.end("Not found");
+  }
+});
+await new Promise((resolve, reject) => {
+  server.once("error", reject);
+  server.listen(4173, "127.0.0.1", resolve);
+});
+
 const playwrightModule = process.env.PLAYWRIGHT_MODULE || "playwright";
 const { chromium } = await import(playwrightModule);
 
-const target = process.env.KD_SITE_URL || "https://livan-commits.github.io/similateur-kd/";
+const target = process.env.KD_SITE_URL || "http://127.0.0.1:4173/";
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 960 } });
 const pageErrors = [];
@@ -113,4 +152,7 @@ try {
   }
   await page.screenshot({ path: "/tmp/kodeos-web-smoke.png", fullPage: true });
   console.log("KODEOS_WEB_SMOKE_OK " + JSON.stringify(result));
-} finally { await browser.close(); }
+} finally {
+  await browser.close();
+  await new Promise(resolve => server.close(resolve));
+}
