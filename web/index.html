@@ -108,6 +108,15 @@
         <div><small>Entrées</small><strong>TCA6408A + CST820</strong></div>
         <div><small>Coprocesseur</small><strong id="c5-status">non lancé</strong></div>
       </div>
+      <h2>Carte SD virtuelle du PC</h2>
+      <div class="actions">
+        <button id="sd-open">Ouvrir le dossier Carte_SD</button>
+        <button id="sd-refresh">Actualiser</button>
+        <label class="download" for="sd-upload" style="cursor:pointer">Importer un fichier</label>
+        <input id="sd-upload" type="file" hidden>
+      </div>
+      <pre id="sd-files" style="height:100px">Carte SD prête à initialiser…</pre>
+      <p class="hint">Stockage persistant sur ce PC, utilisable hors ligne. Ce dossier hôte n'est pas encore raccordé au pilote SDMMC du firmware ESP32.</p>
       <h2>Journal UART0 / KodeOS</h2>
       <pre id="console" aria-live="polite"></pre>
       <p class="hint">Le firmware officiel est chargé dans ESP-EMU. L’horloge reçoit l’heure UTC du navigateur ; l’écran lit directement le framebuffer RGB565 en PSRAM.</p>
@@ -120,6 +129,29 @@
     const canvas = $("screen");
     const ctx = canvas.getContext("2d", { alpha: false });
     const consoleBox = $("console");
+    const sdFiles = $("sd-files");
+    async function refreshSd() {
+      if (!window.kodeDotSD) { sdFiles.textContent = "Disponible dans l’application Windows."; return; }
+      try {
+        const entries = await window.kodeDotSD.list();
+        sdFiles.textContent = entries.length ? entries.map(e => (e.directory ? "[dossier] " : "[fichier] ") + e.name).join("\n") : "Carte SD vide.";
+      } catch (error) { sdFiles.textContent = "Erreur SD : " + error.message; }
+    }
+    $("sd-open").addEventListener("click", async () => {
+      try { log("[SD] " + await window.kodeDotSD.open()); } catch (error) { log("[SD] " + error.message); }
+    });
+    $("sd-refresh").addEventListener("click", refreshSd);
+    $("sd-upload").addEventListener("change", async event => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        await window.kodeDotSD.write(file.name, await file.arrayBuffer());
+        log("[SD] Fichier enregistré : " + file.name);
+        await refreshSd();
+      } catch (error) { log("[SD] Import impossible : " + error.message); }
+      event.target.value = "";
+    });
+    refreshSd();
     const worker = new Worker("./kodeos-worker.js", { type: "module" });
     const localDual = new URLSearchParams(location.search).get("local-dual") === "1";
     const c5Worker = localDual ? new Worker("./c5-worker.js", { type: "module" }) : null;
