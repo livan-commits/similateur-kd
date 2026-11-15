@@ -1,0 +1,14 @@
+{
+  "name": "kode-dot-local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Application Windows hors ligne pour le simulateur KodeOS/KGUI",
+  "main": "main.cjs",
+  "scripts": {
+    "dist:win": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0"
+  }
+}
