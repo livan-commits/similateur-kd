@@ -5,7 +5,7 @@ const WIDTH = 410;
 const HEIGHT = 502;
 const BYTES_PER_PIXEL = 2;
 const MAX_READ_BYTES = 4096;
-const POLL_MS = 250;
+const POLL_MS = 100;
 
 const encoder = new TextEncoder();
 const framebufferBytes = new Uint8Array(WIDTH * HEIGHT * BYTES_PER_PIXEL);
@@ -82,7 +82,7 @@ async function fetchFirmware(url) {
   return bytes;
 }
 
-function publishFrame(seq, y1, y2, byteLength) {
+async function publishFrame(seq, y1, y2, byteLength) {
   if (offscreen && offscreenContext && frameImage) {
     const firstPixel = y1 * WIDTH;
     const pixelCount = (y2 - y1) * WIDTH;
@@ -91,11 +91,16 @@ function publishFrame(seq, y1, y2, byteLength) {
       framePixels32[p] = rgb565ToRgba[rgb565];
     }
     offscreenContext.putImageData(frameImage, 0, 0, 0, y1, WIDTH, y2 - y1);
-    const bitmap = offscreen.transferToImageBitmap();
-    // transferToImageBitmap clears the OffscreenCanvas; restore the complete
-    // image before handing the bitmap to the UI so later dirty rectangles persist.
-    offscreenContext.drawImage(bitmap, 0, 0);
-    report("frame", { image: bitmap, seq, y1, y2 }, [bitmap]);
+    if (typeof createImageBitmap === "function") {
+      // Send only the changed rows instead of copying the whole 410x502 screen.
+      // Keeping the OffscreenCanvas intact also avoids a full-canvas restore.
+      const bitmap = await createImageBitmap(offscreen, 0, y1, WIDTH, y2 - y1);
+      report("frame", { image: bitmap, seq, y1, y2 }, [bitmap]);
+    } else {
+      const bitmap = offscreen.transferToImageBitmap();
+      offscreenContext.drawImage(bitmap, 0, 0);
+      report("frame", { image: bitmap, seq, y1, y2, fullFrame: true }, [bitmap]);
+    }
     return;
   }
 
@@ -104,7 +109,7 @@ function publishFrame(seq, y1, y2, byteLength) {
   report("frame-rgb565", { data: copy.buffer, seq, y1, y2 }, [copy.buffer]);
 }
 
-function pollFramebuffer() {
+async function pollFramebuffer() {
   if (!running || !emulator || !framebufferAddresses || pollInProgress) return;
   pollInProgress = true;
   try {
@@ -139,7 +144,7 @@ function pollFramebuffer() {
     const seqAfterCopy = readMemoryWord(sequence);
     if (seqAfterCopy !== seqCheck || (seqAfterCopy & 1) !== 0) return;
 
-    publishFrame(seqAfterCopy, y1, y2, byteLength);
+    await publishFrame(seqAfterCopy, y1, y2, byteLength);
     lastFramebufferSeq = seqAfterCopy;
     hasFramebufferFrame = true;
     framebufferErrorShown = false;
