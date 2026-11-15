@@ -138,6 +138,20 @@
     let lastFramebufferSeq = -1;
     let hasFramebufferFrame = false;
     let framebufferErrorShown = false;
+    // Buffers persistants : aucune allocation d'image à chaque rafraîchissement.
+    const framebufferBytes = new Uint8Array(410 * 502 * 2);
+    const framebufferImage = ctx.createImageData(410, 502);
+    const framebufferPixels32 = new Uint32Array(framebufferImage.data.buffer);
+    const rgb565ToRgba = new Uint32Array(65536);
+    for (let value = 0; value < 65536; value++) {
+      const r = (value >>> 11) & 0x1f;
+      const g = (value >>> 5) & 0x3f;
+      const b = value & 0x1f;
+      const red = (r * 255 + 15) / 31;
+      const green = (g * 255 + 31) / 63;
+      const blue = (b * 255 + 15) / 31;
+      rgb565ToRgba[value] = (0xff000000 | (blue << 16) | (green << 8) | red) >>> 0;
+    }
 
     function setStatus(message, kind = "") {
       $("status").textContent = message;
@@ -215,7 +229,7 @@
         }
 
         const byteLength = (y2 - y1) * 410 * 2;
-        const pixels = new Uint8Array(byteLength);
+        const pixels = framebufferBytes.subarray(0, byteLength);
         const maxChunk = Number(framebufferSymbols.max_read_bytes || 4096);
         for (let offset = 0; offset < byteLength; offset += maxChunk) {
           const count = Math.min(maxChunk, byteLength - offset);
@@ -229,18 +243,14 @@
         const seqAfterCopy = readMemoryWord(seqAddress);
         if (seqAfterCopy !== seqCheck || (seqAfterCopy & 1) !== 0) return;
 
-        const image = ctx.createImageData(410, y2 - y1);
-        for (let i = 0, p = 0; i < pixels.length; i += 2, p += 4) {
+        // Conversion RGB565 accélérée par table de correspondance 16 bits.
+        const firstPixel = y1 * 410;
+        const pixelCount = (y2 - y1) * 410;
+        for (let i = 0, p = firstPixel; i < byteLength; i += 2, p++) {
           const rgb565 = pixels[i] | (pixels[i + 1] << 8);
-          const r = (rgb565 >>> 11) & 0x1f;
-          const g = (rgb565 >>> 5) & 0x3f;
-          const b = rgb565 & 0x1f;
-          image.data[p] = (r * 255 + 15) / 31;
-          image.data[p + 1] = (g * 255 + 31) / 63;
-          image.data[p + 2] = (b * 255 + 15) / 31;
-          image.data[p + 3] = 255;
+          framebufferPixels32[p] = rgb565ToRgba[rgb565];
         }
-        ctx.putImageData(image, 0, y1);
+        ctx.putImageData(framebufferImage, 0, 0, 0, y1, 410, y2 - y1);
         lastFramebufferSeq = seqAfterCopy;
         hasFramebufferFrame = true;
         framebufferErrorShown = false;
