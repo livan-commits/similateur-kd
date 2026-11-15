@@ -297,6 +297,12 @@ jobs:
       - name: Checkout smoke test
         uses: actions/checkout@v4
 
+      - name: Download the exact runtime built by this workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: kode-dot-web-dist
+          path: dist
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -311,7 +317,8 @@ jobs:
       - name: Verify the public KodeOS boot, UTC clock and real KGUI framebuffer
         shell: bash
         env:
-          KD_SITE_URL: https://livan-commits.github.io/similateur-kd/
+          KD_SITE_URL: http://127.0.0.1:4173/
+          KD_SITE_DIR: dist
           PLAYWRIGHT_MODULE: /tmp/kd-smoke/node_modules/playwright/index.mjs
         run: node scripts/smoke-web.mjs
 
