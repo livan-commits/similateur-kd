@@ -1,0 +1,24 @@
+appId: diy.kode.simulator
+productName: Kode Dot Local
+asar: true
+directories:
+  output: release
+files:
+  - main.cjs
+  - package.json
+  - site/**/*
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  artifactName: Kode-Dot-Local-${version}-${arch}.${ext}
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+portable:
+  artifactName: Kode-Dot-Local-Portable-${version}-${arch}.${ext}
