@@ -92,6 +92,9 @@ function publishFrame(seq, y1, y2, byteLength) {
     }
     offscreenContext.putImageData(frameImage, 0, 0, 0, y1, WIDTH, y2 - y1);
     const bitmap = offscreen.transferToImageBitmap();
+    // transferToImageBitmap clears the OffscreenCanvas; restore the complete
+    // image before handing the bitmap to the UI so later dirty rectangles persist.
+    offscreenContext.drawImage(bitmap, 0, 0);
     report("frame", { image: bitmap, seq, y1, y2 }, [bitmap]);
     return;
   }
@@ -195,7 +198,7 @@ async function boot() {
     boardWorker.postMessage({
       type: "start",
       port: channel.port2,
-      module: "./esp-emu/parts/kode_board.wasm",
+      module: "./parts/kode_board.wasm",
       config: { pins: { SCL: 5, SDA: 4 } }
     }, [channel.port2]);
 
@@ -204,6 +207,9 @@ async function boot() {
     }
     report("log", { message: "[I2C] Carte Kode Dot virtuelle attachée · TCA6408A + CST820" });
 
+    running = true;
+    framebufferTimer = setInterval(pollFramebuffer, POLL_MS);
+    report("ready");
     pump.start(
       (output) => report("uart", { data: output }),
       (error) => {
@@ -212,9 +218,6 @@ async function boot() {
         report("error", { message: "[emu error] " + (error?.message || error) });
       }
     );
-    running = true;
-    framebufferTimer = setInterval(pollFramebuffer, POLL_MS);
-    report("ready");
   } catch (error) {
     running = false;
     if (framebufferTimer) clearInterval(framebufferTimer);
