@@ -42,8 +42,8 @@ let lastFramebufferSeq = -1;
 let framebufferErrorShown = false;
 let pollInProgress = false;
 
-function report(type, data = {}) {
-  postMessage({ type, ...data });
+function report(type, data = {}, transfer = []) {
+  postMessage({ type, ...data }, transfer);
 }
 
 function readMemoryWord(address) {
