@@ -219,6 +219,7 @@ jobs:
           cp upstream/build/kodeos-flash.bin dist/firmware/
           cp framebuffer-symbols.json dist/framebuffer-symbols.json
           cp web/index.html dist/index.html
+          cp web/kodeos-worker.js dist/kodeos-worker.js
           touch dist/.nojekyll
 
       - name: Write source manifest
@@ -255,13 +256,14 @@ jobs:
           assert symbols["bytes_per_pixel"] == 2 and symbols["max_read_bytes"] == 4096
           for key in ("front_pointer_address", "sequence_address", "dirty_y1_address", "dirty_y2_address"):
               assert int(symbols[key], 16) > 0
-          for name in ("framebuffer-symbols.json", "index.html", "versions.json", "firmware/kodeos-flash.bin", "esp-emu/index.html", "esp-emu/app.js", "esp-emu/worker.js", "esp-emu/pkg/esp_emu.js", "esp-emu/pkg/esp_emu_bg.wasm", "esp-emu/cosim.js", "esp-emu/part-worker.js", "esp-emu/vendor/esp_cosim_pb.js", "esp-emu/parts/kode_board.wasm"):
+          for name in ("framebuffer-symbols.json", "index.html", "kodeos-worker.js", "versions.json", "firmware/kodeos-flash.bin", "esp-emu/index.html", "esp-emu/app.js", "esp-emu/worker.js", "esp-emu/pkg/esp_emu.js", "esp-emu/pkg/esp_emu_bg.wasm", "esp-emu/cosim.js", "esp-emu/part-worker.js", "esp-emu/vendor/esp_cosim_pb.js", "esp-emu/parts/kode_board.wasm"):
               path = Path("dist") / name
               assert path.is_file() and path.stat().st_size > 0, name
               print(f"OK {path} ({path.stat().st_size} bytes)")
           html = Path("dist/index.html").read_text()
           assert 'name="viewport"' in html
-          assert "CosimPump" in html
+          assert "kodeos-worker.js" in html
+          assert "CosimPump" not in html
           assert "kode_board.wasm" in html
           assert 'id="screen"' in html
           assert "time set=" in html
