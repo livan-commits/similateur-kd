@@ -253,22 +253,11 @@ async function createWindow() {
 
 async function verifyFlashPersistence(window, state, finish) {
   try {
-    const acknowledged = await new Promise((resolve) => {
-      const onSaved = (event) => {
-        if (event.sender !== window.webContents) return;
-        clearTimeout(saveTimeout);
-        ipcMain.removeListener("app:flash-saved", onSaved);
-        resolve(true);
-      };
-      const saveTimeout = setTimeout(() => {
-        ipcMain.removeListener("app:flash-saved", onSaved);
-        resolve(false);
-      }, 30000);
-      ipcMain.on("app:flash-saved", onSaved);
-      window.webContents.send("app:save-flash");
-    });
-    if (!acknowledged) {
-      finish(1, { reason: "Le pont de sauvegarde de la flash n'a pas répondu.", state });
+    const saveResult = await window.webContents.executeJavaScript(
+      "window.__kodeDotRequestFlashSnapshot ? window.__kodeDotRequestFlashSnapshot() : Promise.resolve({ saved: false, reason: 'Le pont de sauvegarde n’est pas initialisé.' })"
+    );
+    if (!saveResult?.saved && !saveResult?.unchanged) {
+      finish(1, { reason: saveResult?.reason || "La sauvegarde de la flash a échoué.", state });
       return;
     }
     const imageSize = fsSync.statSync(flashPath()).size;
