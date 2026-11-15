@@ -194,7 +194,7 @@ impl Device for KodeBoard {
                 self.touch_pressed = false;
                 self.tca_input |= 1 << 6;
                 self.set_touch_frame();
-                self.tca_input |= self.transient_buttons;
+                self.tca_input |= self.transient_buttons & !self.held_buttons;
                 self.transient_buttons = 0;
                 if self.transient_top {
                     self.top_high = true;
