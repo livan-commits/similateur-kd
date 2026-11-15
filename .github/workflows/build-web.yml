@@ -271,10 +271,10 @@ jobs:
         uses: actions/deploy-pages@v4
 
   smoke:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ always() && needs.build.result == 'success' && (needs.deploy.result == 'success' || needs.deploy.result == 'skipped') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/windows-offline-app') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: deploy
+    needs: [build, deploy]
     steps:
       - name: Checkout smoke test
         uses: actions/checkout@v4
