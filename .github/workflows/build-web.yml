@@ -111,25 +111,9 @@ jobs:
           test -n "$www_dir"
           cp -a "$www_dir"/. dist/esp-emu/
 
-      - name: Inspect official ESP-EMU browser hooks for the firmware display bridge
+      - name: Validate official ESP-EMU memory and UART APIs
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          terms = ("WasmEmulator", "load_firmware", "psram", "read_memory", "memory_read", "uart0", "run_batch", "cosim_attach", "set_psram")
-          for name in ("index.html", "app.js", "cosim.js", "pkg/esp_emu.js"):
-              path = Path("dist/esp-emu") / name
-              if not path.is_file():
-                  continue
-              source = path.read_text(errors="replace")
-              print(f"\\n===== {name} ({len(source)} chars) =====")
-              for term in terms:
-                  pos = source.find(term)
-                  if pos >= 0:
-                      print(f"--- {term} ---")
-                      print(source[max(0, pos-220):pos+520].replace("\\n", " ")[:800])
-          PY
-
           node --input-type=module <<'JS'
           try {
             const api = await import("./dist/esp-emu/pkg/esp_emu.js");
@@ -150,43 +134,6 @@ jobs:
             throw error;
           }
           JS
-
-      - name: Inspect the official ESP-EMU worker protocol before moving the guest
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          root = Path("dist/esp-emu")
-          worker = root / "worker.js"
-          app = root / "app.js"
-          assert worker.is_file() and app.is_file()
-          print("\\n===== OFFICIAL worker.js FULL SOURCE =====")
-          print(worker.read_text(errors="replace"))
-          source = app.read_text(errors="replace")
-          print("\\n===== app.js worker orchestration references =====")
-          lines = source.splitlines()
-          hits = [i for i, line in enumerate(lines) if "Worker(" in line or "worker.js" in line or "postMessage(" in line or "onmessage" in line]
-          shown = set()
-          for i in hits:
-              for j in range(max(0, i-12), min(len(lines), i+22)):
-                  if j not in shown:
-                      print(f"{j+1}: {lines[j]}")
-                      shown.add(j)
-              print("---")
-          PY
-
-      - name: Inspect ESP-EMU co-simulation bridge before isolating the firmware worker
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          for name in ("cosim.js", "part-worker.js", "vendor/esp_cosim_pb.js"):
-              path = Path("dist/esp-emu") / name
-              if path.is_file():
-                  source = path.read_text(errors="replace")
-                  print(f"\\n===== {name} ({len(source)} chars) =====")
-                  print(source[:60000])
-          PY
 
       - name: Checkout official ESP-EMU v1.0.0 virtual-part SDK
         uses: actions/checkout@v4
@@ -212,6 +159,11 @@ jobs:
           cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/kode_board.wasm" dist/esp-emu/parts/
           test -s dist/esp-emu/parts/kode_board.wasm
 
+      - name: Syntax-check the browser worker
+        shell: bash
+        run: |
+          node --input-type=module --check < web/kodeos-worker.js
+
       - name: Prepare single-page KodeOS web emulator
         shell: bash
         run: |
@@ -232,9 +184,9 @@ jobs:
             "kodeos_sdk_commit": "1841cc8c13d4b2e3e4d7288b40cdac5de207a133",
             "renderer": "official ESP-EMU browser runtime executing pinned KodeOS ESP32-P4 firmware; real KGUI RGB565 framebuffer read directly from the firmware's PSRAM through ESP-EMU read_memory",
             "firmware": "KodeOS ESP32-P4 merged flash image including storage at 0x1800000; simulator-only headless display overlay",
-            "c5": "KodeOS-pinned ESP32-C5 coprocessor firmware included in storage",
+            "c5": "KodeOS-pinned ESP32-C5 coprocessor firmware included in storage; C5 runtime not yet separately emulated in this web build",
             "esp_emu": "v1.0.0",
-            "display": "410x502 RGB565 framebuffer rendered by real KGUI and polled directly from PSRAM using ELF-exported symbols; CO5300 MIPI-DSI bypassed",
+            "display": "410x502 RGB565 framebuffer rendered by real KGUI and polled from PSRAM by a dedicated Web Worker using ELF-exported symbols; CO5300 MIPI-DSI bypassed",
             "virtual_parts": "TCA6408A at I2C 0x20 and CST820 at I2C 0x15; GPIO5 SCL, GPIO4 SDA, GPIO6 IRQ, TOP key on GPIO35"
           }
           EOF
@@ -266,12 +218,14 @@ jobs:
           assert "CosimPump" not in html
           assert "kode_board.wasm" in html
           assert 'id="screen"' in html
-          assert "time set=" in html
-          assert "uart_input" in html
-          assert "read_memory(" in html
-          assert "framebuffer-symbols.json" in html
-          assert "screenshot dst=console" not in html
-          assert "kodeos-flash.bin" in html
+          worker = Path("dist/kodeos-worker.js").read_text()
+          assert "time set=" in worker
+          assert "uart_input" in worker
+          assert "read_memory(" in worker
+          assert "framebuffer-symbols.json" in worker
+          assert "kode_board.wasm" in worker
+          assert "screenshot dst=console" not in html + worker
+          assert "kodeos-flash.bin" in worker
           assert "esp-emu/index.html" not in html
           PY
 
