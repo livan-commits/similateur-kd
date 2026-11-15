@@ -247,3 +247,38 @@ jobs:
       - name: Publish web emulator
         id: deployment
         uses: actions/deploy-pages@v4
+
+  smoke:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: deploy
+    steps:
+      - name: Checkout smoke test
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright and Chromium
+        shell: bash
+        run: |
+          npm install --prefix /tmp/kd-smoke playwright@1.55.0
+          /tmp/kd-smoke/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Verify the public KodeOS boot, UTC clock and real KGUI framebuffer
+        shell: bash
+        env:
+          KD_SITE_URL: https://livan-commits.github.io/similateur-kd/
+          PLAYWRIGHT_MODULE: /tmp/kd-smoke/node_modules/playwright/index.mjs
+        run: node scripts/smoke-web.mjs
+
+      - name: Upload browser smoke screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kodeos-web-smoke
+          path: /tmp/kodeos-web-smoke.png
+          if-no-files-found: ignore
