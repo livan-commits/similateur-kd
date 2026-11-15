@@ -41,6 +41,12 @@ let hasFramebufferFrame = false;
 let lastFramebufferSeq = -1;
 let framebufferErrorShown = false;
 let pollInProgress = false;
+let firmwareLoaded = false;
+let flashSaveTimer = null;
+let flashImageLength = 0;
+let firmwareHash = "";
+let lastSavedFlashHash = null;
+let pendingFlashHash = null;
 
 function report(type, data = {}, transfer = []) {
   postMessage({ type, ...data }, transfer);
@@ -173,12 +179,54 @@ async function pollFramebuffer() {
   }
 }
 
+function hashFlash(bytes) {
+  let a = 0x811c9dc5;
+  let b = 0x9e3779b9;
+  for (let i = 0; i < bytes.length; i++) {
+    const value = bytes[i];
+    a = Math.imul(a ^ value, 0x01000193);
+    b = Math.imul(b ^ value, 0x85ebca6b);
+  }
+  return (a >>> 0).toString(16) + "-" + (b >>> 0).toString(16) + "-" + bytes.length;
+}
+
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, "0")).join("");
+}
+
+function exportFlash() {
+  if (!emulator || !firmwareLoaded) {
+    report("flash-unchanged");
+    return;
+  }
+  if (pendingFlashHash) {
+    report("flash-pending");
+    return;
+  }
+  try {
+    const state = emulator.flash_state();
+    if (!(state instanceof Uint8Array) || state.length !== flashImageLength) {
+      throw new Error("Taille de la mémoire flash émulée inattendue");
+    }
+    const hash = hashFlash(state);
+    if (hash === lastSavedFlashHash) {
+      report("flash-unchanged");
+      return;
+    }
+    pendingFlashHash = hash;
+    report("flash-state", { data: state.buffer, hash, firmwareHash }, [state.buffer]);
+  } catch (error) {
+    report("error", { message: "[flash] " + (error?.message || error) });
+  }
+}
+
 function sendUart(text) {
   if (!emulator) return;
   emulator.uart_input(encoder.encode(text));
 }
 
-async function boot() {
+async function boot(savedFlash = null, persistFlash = false) {
   if (booting || running) return;
   booting = true;
   try {
@@ -186,10 +234,29 @@ async function boot() {
     await init();
     emulator = new WasmEmulator("esp32p4");
 
-    const firmware = await fetchFirmware("./firmware/kodeos-flash.bin");
+    const defaultFirmware = await fetchFirmware("./firmware/kodeos-flash.bin");
+    firmwareHash = await sha256Hex(defaultFirmware);
+    let firmware = defaultFirmware;
+    if (savedFlash?.data && savedFlash.firmwareHash === firmwareHash) {
+      const savedImage = new Uint8Array(savedFlash.data);
+      if (savedImage.length === defaultFirmware.length) {
+        firmware = savedImage;
+        report("log", { message: "[flash] Mémoire interne restaurée depuis ce PC" });
+      } else {
+        report("log", { message: "[flash] Sauvegarde ignorée : taille incompatible ; fichier conservé" });
+      }
+    } else if (savedFlash?.data) {
+      report("log", { message: "[flash] Sauvegarde d'un autre firmware détectée ; démarrage propre, ancienne image conservée" });
+    }
     report("log", { message: "[emu] Firmware KodeOS fusionné chargé (" + firmware.length.toLocaleString("fr-FR") + " octets)" });
     emulator.load_default_rom();
     await emulator.load_firmware(firmware);
+    flashImageLength = firmware.length;
+    lastSavedFlashHash = savedFlash?.data && savedFlash.firmwareHash === firmwareHash
+      ? hashFlash(firmware)
+      : null;
+    firmwareLoaded = true;
+    if (persistFlash) flashSaveTimer = setInterval(exportFlash, 300000);
 
     const symbolsResponse = await fetch("./framebuffer-symbols.json");
     if (!symbolsResponse.ok) throw new Error("Table des symboles framebuffer HTTP " + symbolsResponse.status);
@@ -235,12 +302,16 @@ async function boot() {
       (error) => {
         running = false;
         if (framebufferTimer) clearInterval(framebufferTimer);
+        if (flashSaveTimer) clearInterval(flashSaveTimer);
+        firmwareLoaded = false;
         report("error", { message: "[emu error] " + (error?.message || error) });
       }
     );
   } catch (error) {
     running = false;
     if (framebufferTimer) clearInterval(framebufferTimer);
+    if (flashSaveTimer) clearInterval(flashSaveTimer);
+    firmwareLoaded = false;
     report("error", { message: error?.stack || String(error) });
   } finally {
     booting = false;
@@ -251,7 +322,16 @@ onmessage = (event) => {
   const message = event.data || {};
   try {
     if (message.type === "start") {
-      boot();
+      boot(message.savedFlash || null, message.persistFlash === true);
+    } else if (message.type === "export-flash") {
+      exportFlash();
+    } else if (message.type === "flash-saved") {
+      if (pendingFlashHash && message.hash === pendingFlashHash) {
+        lastSavedFlashHash = pendingFlashHash;
+        pendingFlashHash = null;
+      }
+    } else if (message.type === "flash-save-failed") {
+      if (pendingFlashHash && message.hash === pendingFlashHash) pendingFlashHash = null;
     } else if (message.type === "uart" && emulator) {
       sendUart(message.data || "");
     } else if (message.type === "sync-time" && emulator) {
