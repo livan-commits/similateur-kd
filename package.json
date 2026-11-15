@@ -5,7 +5,7 @@
   "description": "Simulateur Kode Dot autonome pour Windows",
   "main": "electron/main.cjs",
   "scripts": {
-    "build:windows": "electron-builder --win nsis --x64"
+    "build:windows": "electron-builder --win nsis --x64 --publish never"
   },
   "devDependencies": {
     "electron": "45.3.2",
