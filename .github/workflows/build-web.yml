@@ -175,6 +175,19 @@ jobs:
               print("---")
           PY
 
+      - name: Inspect ESP-EMU co-simulation bridge before isolating the firmware worker
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ("cosim.js", "part-worker.js", "vendor/esp_cosim_pb.js"):
+              path = Path("dist/esp-emu") / name
+              if path.is_file():
+                  source = path.read_text(errors="replace")
+                  print(f"\\n===== {name} ({len(source)} chars) =====")
+                  print(source[:60000])
+          PY
+
       - name: Checkout official ESP-EMU v1.0.0 virtual-part SDK
         uses: actions/checkout@v4
         with:
