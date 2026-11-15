@@ -120,6 +120,7 @@
       </div>
       <select id="sd-files" size="6" aria-label="Contenu de la carte SD virtuelle" style="width:100%;background:#0d0e11;color:#d0d7df;border:1px solid #343840;border-radius:10px;padding:8px"></select>
       <p class="hint">Stockage persistant local : import de fichiers ou dossiers, export et suppression. Il reste un dossier hôte Windows ; le pilote SDMMC du firmware n’y accède pas encore.</p>
+      <p class="hint">La mémoire flash interne de KodeOS (configuration, données et applications en flash) est sauvegardée sur ce PC à la fermeture et périodiquement. Le dossier Carte_SD reste un dossier hôte : le firmware ne le monte pas encore.</p>
       <p class="hint">Le C5 peut être démarré séparément pour tester son firmware, mais il n’est pas encore relié au P4 par SDIO.</p>
       <h2>Journal UART0 / KodeOS</h2>
       <pre id="console" aria-live="polite"></pre>
@@ -185,6 +186,9 @@
     let timeSyncReady = false;
     let firstConsoleReady = false;
     let framebufferErrorShown = false;
+    let flashCloseRequested = false;
+    let flashCloseAcked = false;
+    let flashSaveChain = Promise.resolve();
 
     const fallbackImage = ctx.createImageData(410, 502);
     const fallbackPixels32 = new Uint32Array(fallbackImage.data.buffer);
@@ -317,6 +321,36 @@
       $("sync").disabled = false;
     }
 
+    function acknowledgeFlashClose() {
+      if (!flashCloseRequested || flashCloseAcked || !window.kodeDotSD?.flashSaved) return;
+      flashCloseAcked = true;
+      window.kodeDotSD.flashSaved();
+    }
+
+    function queueFlashSave(message) {
+      if (!window.kodeDotSD?.saveFlash) return;
+      flashSaveChain = flashSaveChain.then(async () => {
+        const result = await window.kodeDotSD.saveFlash(message.data, message.firmwareHash);
+        worker.postMessage({ type: "flash-saved", hash: message.hash });
+        log("[flash] Mémoire interne sauvegardée (" + Math.round(result.size / 1048576) + " Mio)");
+      }).catch(error => {
+        worker.postMessage({ type: "flash-save-failed", hash: message.hash });
+        log("[flash] Sauvegarde impossible : " + (error?.message || error));
+      });
+      if (flashCloseRequested) flashSaveChain.finally(acknowledgeFlashClose);
+    }
+
+    if (window.kodeDotSD?.onSaveFlash) {
+      window.kodeDotSD.onSaveFlash(() => {
+        flashCloseRequested = true;
+        if (!startRequested) {
+          acknowledgeFlashClose();
+          return;
+        }
+        worker.postMessage({ type: "export-flash" });
+      });
+    }
+
     worker.onmessage = (event) => {
       const message = event.data || {};
       switch (message.type) {
@@ -359,6 +393,13 @@
         case "frame-rgb565":
           drawRgb565Frame(message);
           break;
+        case "flash-state":
+          queueFlashSave(message);
+          break;
+        case "flash-unchanged":
+        case "flash-pending":
+          if (flashCloseRequested) flashSaveChain.finally(acknowledgeFlashClose);
+          break;
         case "error":
           setStatus("Erreur du simulateur", "warn");
           log(message.message || "Erreur inconnue du Worker");
@@ -377,7 +418,21 @@
       startRequested = true;
       $("start").disabled = true;
       setStatus("Chargement du moteur ESP-EMU dans un Worker…", "warn");
-      worker.postMessage({ type: "start" });
+      let savedFlash = null;
+      if (window.kodeDotSD?.loadFlash) {
+        try {
+          savedFlash = await window.kodeDotSD.loadFlash();
+          if (savedFlash?.data) log("[flash] Sauvegarde locale détectée ; vérification de compatibilité…");
+        } catch (error) {
+          log("[flash] Lecture de la sauvegarde impossible : " + (error?.message || error));
+        }
+      }
+      const transfer = savedFlash?.data instanceof ArrayBuffer ? [savedFlash.data] : [];
+      worker.postMessage({
+        type: "start",
+        savedFlash,
+        persistFlash: Boolean(window.kodeDotSD?.saveFlash)
+      }, transfer);
     }
 
     $("start").addEventListener("click", start);
