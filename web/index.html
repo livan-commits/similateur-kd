@@ -350,8 +350,8 @@
         running = true;
         $("sync").disabled = false;
         if (framebufferTimer) clearInterval(framebufferTimer);
-        // 20 Hz : réduit le délai maximal de rafraîchissement de 250 à 50 ms.
-        framebufferTimer = setInterval(pollFramebuffer, 50);
+        // Fréquence conservatrice pour ne pas concurrencer le cœur ESP-EMU.
+        framebufferTimer = setInterval(pollFramebuffer, 250);
       } catch (error) {
         setStatus("Échec du démarrage", "warn");
         log("[erreur] " + (error?.stack || error));
