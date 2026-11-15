@@ -120,7 +120,7 @@ Chaque modèle devra être vérifié par des tests unitaires sur ses transaction
 
 1. **MIPI-DSI / CO5300** : le contrat Virtual Parts v1.0.0 ne décrit que GPIO, I2C et SPI. Il ne fournit pas à lui seul un écran MIPI-DSI. Il faudra vérifier si le SoC emulator expose un contrôleur DSI utilisable par le firmware ; sinon, un pont d'affichage spécifique sera nécessaire.
 2. **Audio I2S** : aucune interface de part I2S n'est documentée dans le contrat actuel.
-3. **microSD / SDMMC** : pas de part SDMMC documentée dans le contrat actuel.
+3. **microSD / SDMMC** : pas de part SDMMC documentée dans le contrat Virtual Parts navigateur. Le pilote KodeOS utilise le slot 0 pour la carte microSD ; le slot 1 est réservé au lien ESP-Hosted C5. Il faut modéliser une carte SDMMC au niveau du contrôleur, pas simplement partager un dossier Windows.
 4. **P4–C5 / ESP-Hosted SDIO** : la documentation Hosted v1.0.0 décrit un pont natif P4–C6 sur socket Unix, pas un pont navigateur P4–C5. La paire du Kode Dot n'est donc pas considérée comme intégrée.
 5. **Firmware KodeOS** : la réussite du simulateur KGUI ou le chargement d'un firmware ESP32 générique ne prouve pas que l'image KodeOS démarre ni que ses Active Objects fonctionnent.
 
@@ -142,3 +142,7 @@ Chaque modèle devra être vérifié par des tests unitaires sur ses transaction
 - Ce stockage est une **bibliothèque de fichiers côté hôte**, pas une carte SDMMC émulée. Le firmware ESP32-P4 ne peut pas monter ni lire ces fichiers, car ESP-EMU v1.0.0 ne fournit pas d'interface SDMMC Virtual Part. Aucune image FAT n'est présentée comme montée par KodeOS.
 
 Pour raccorder réellement ces deux interfaces, il faut étendre le moteur ESP-EMU ou ajouter une couche d'émulation bas niveau testée pour SDIO/SDMMC, puis valider les transactions avec les pilotes du SDK KodeOS épinglé. Un pont UART ou un partage de fichiers côté interface ne serait pas un substitut fidèle à ces bus.
+
+## Précision sur les deux slots SDMMC
+
+Le SDK officiel KodeOS réserve le slot 1 du contrôleur SDMMC du P4 au coprocesseur C5 via ESP-Hosted. La microSD est montée séparément sur le slot 0 et apparaît dans le firmware sous /sdcard. En conséquence, deux fonctions différentes sont nécessaires dans le simulateur : un pont SDIO/ESP-Hosted P4–C5 et un modèle de carte SD répondant au protocole SDMMC sur le slot 0. Le dossier Windows persistant n'est pas encore raccordé à l'un ou l'autre.
