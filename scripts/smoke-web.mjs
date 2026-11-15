@@ -71,7 +71,7 @@ try {
     await page.waitForFunction(() => window.__kdWorkers?.some(w => w.url.includes("kodeos-worker.js")), null, { timeout: 15000, polling: 100 });
     await page.evaluate(() => {
       const worker = window.__kdWorkers.find(w => w.url.includes("kodeos-worker.js"));
-      worker.instance.postMessage({ type: "uart", data: "gui_info\\n" });
+      worker.instance.postMessage({ type: "uart", data: "gui_info\n" });
     });
     await page.waitForFunction(() => {
       const output = document.querySelector("#console")?.textContent || "";
