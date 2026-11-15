@@ -21,7 +21,9 @@ struct KodeBoard {
     touch_pressed: bool,
     touch_x: u16,
     touch_y: u16,
-    event_active: bool,
+    held_buttons: u8,
+    transient_buttons: u8,
+    transient_top: bool,
     release_at_ns: Option<u64>,
     irq_high: bool,
     last_irq_high: Option<bool>,
@@ -49,7 +51,9 @@ impl Default for KodeBoard {
             touch_pressed: false,
             touch_x: 0,
             touch_y: 0,
-            event_active: false,
+            held_buttons: 0,
+            transient_buttons: 0,
+            transient_top: false,
             release_at_ns: None,
             irq_high: true,
             last_irq_high: None,
@@ -118,14 +122,36 @@ impl Device for KodeBoard {
             return;
         }
 
-        if name == "button:top" {
-            // TOP is the sixth physical key, wired directly to P4 GPIO35.
-            self.top_high = false;
-            self.event_active = true;
-            self.release_at_ns = None;
+        let (button, action) = if let Some(button) = name.strip_suffix(":down") {
+            (button, Some(true))
+        } else if let Some(button) = name.strip_suffix(":up") {
+            (button, Some(false))
+        } else {
+            (name, None)
+        };
+
+        if button == "button:top" {
+            // TOP is wired directly to P4 GPIO35. A plain input is a short tap;
+            // the down/up pair keeps the physical key held for as long as pressed.
+            match action {
+                Some(true) => {
+                    self.top_high = false;
+                    self.transient_top = false;
+                }
+                Some(false) => {
+                    self.top_high = true;
+                    self.transient_top = false;
+                }
+                None => {
+                    self.top_high = false;
+                    self.transient_top = true;
+                    self.release_at_ns = None;
+                }
+            }
             return;
         }
-        let bit = match name {
+
+        let bit = match button {
             "button:bot" => Some(0),
             "button:up" => Some(1),
             "button:left" => Some(2),
@@ -134,29 +160,52 @@ impl Device for KodeBoard {
             _ => None,
         };
         if let Some(bit) = bit {
-            self.tca_input &= !(1 << bit);
-            self.start_interrupt();
+            let mask = 1u8 << bit;
+            match action {
+                Some(true) => {
+                    self.held_buttons |= mask;
+                    self.transient_buttons &= !mask;
+                    self.tca_input &= !mask;
+                    self.irq_high = false;
+                }
+                Some(false) => {
+                    self.held_buttons &= !mask;
+                    if self.transient_buttons & mask == 0 {
+                        self.tca_input |= mask;
+                    }
+                }
+                None => {
+                    self.transient_buttons |= mask;
+                    self.tca_input &= !mask;
+                    self.start_interrupt();
+                }
+            }
         }
     }
 
     fn poll(&mut self, now_ns: u64) -> Option<EmulatorMessage> {
-        if self.event_active && self.release_at_ns.is_none() {
+        if self.release_at_ns.is_none()
+            && (self.touch_pressed || self.transient_buttons != 0 || self.transient_top)
+        {
             self.release_at_ns = Some(now_ns.saturating_add(PRESS_NS));
-            if self.touch_pressed || self.tca_input != 0xFF {
-                self.irq_high = false;
-            }
         }
         if let Some(deadline) = self.release_at_ns {
             if now_ns >= deadline {
                 self.touch_pressed = false;
+                self.tca_input |= 1 << 6;
                 self.set_touch_frame();
-                self.tca_input = 0xFF;
-                self.event_active = false;
+                self.tca_input |= self.transient_buttons;
+                self.transient_buttons = 0;
+                if self.transient_top {
+                    self.top_high = true;
+                    self.transient_top = false;
+                }
                 self.release_at_ns = None;
-                self.irq_high = true;
-                self.top_high = true;
             }
         }
+        self.irq_high = self.held_buttons == 0
+            && self.transient_buttons == 0
+            && !self.touch_pressed;
         if self.last_irq_high != Some(self.irq_high) {
             self.last_irq_high = Some(self.irq_high);
             return Some(drive(IRQ_PIN, self.irq_high, now_ns));
@@ -184,8 +233,8 @@ impl Device for KodeBoard {
 
 impl KodeBoard {
     fn start_interrupt(&mut self) {
-        self.event_active = true;
         self.release_at_ns = None;
+        self.irq_high = false;
     }
 
     fn set_touch_frame(&mut self) {
