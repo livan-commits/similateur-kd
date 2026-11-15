@@ -358,7 +358,7 @@ function verifyOfflineBoot(window) {
           if (externalRequestCount !== 0) {
             finish(1, { reason: "Une requête externe a été tentée.", state });
           } else {
-            verifyFlashPersistence(window, state, finish);
+            await verifyFlashPersistence(window, state, finish);
           }
         }
       } catch (error) {
