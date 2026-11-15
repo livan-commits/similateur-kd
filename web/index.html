@@ -115,41 +115,29 @@
   </main>
 
   <script type="module">
-    import init, { WasmEmulator } from "./esp-emu/pkg/esp_emu.js";
-    import { CosimPump } from "./esp-emu/cosim.js";
-
     const $ = (id) => document.getElementById(id);
     const canvas = $("screen");
     const ctx = canvas.getContext("2d", { alpha: false });
     const consoleBox = $("console");
-    let emu = null;
-    let pump = null;
-    let boardWorker = null;
+    const worker = new Worker("./kodeos-worker.js", { type: "module" });
+
     let running = false;
-    let uartSend = null;
-    let shotActive = false;
-    let shotParts = [];
-    let shotTimer = null;
+    let startRequested = false;
     let timeTimer = null;
     let timeSyncReady = false;
-    let firstAssetsSeen = false;
-    let framebufferSymbols = null;
-    let framebufferTimer = null;
-    let lastFramebufferSeq = -1;
-    let hasFramebufferFrame = false;
+    let firstConsoleReady = false;
     let framebufferErrorShown = false;
-    // Buffers persistants : aucune allocation d'image à chaque rafraîchissement.
-    const framebufferBytes = new Uint8Array(410 * 502 * 2);
-    const framebufferImage = ctx.createImageData(410, 502);
-    const framebufferPixels32 = new Uint32Array(framebufferImage.data.buffer);
+
+    const fallbackImage = ctx.createImageData(410, 502);
+    const fallbackPixels32 = new Uint32Array(fallbackImage.data.buffer);
     const rgb565ToRgba = new Uint32Array(65536);
     for (let value = 0; value < 65536; value++) {
       const r = (value >>> 11) & 0x1f;
       const g = (value >>> 5) & 0x3f;
       const b = value & 0x1f;
-      const red = (r * 255 + 15) / 31;
-      const green = (g * 255 + 31) / 63;
-      const blue = (b * 255 + 15) / 31;
+      const red = Math.round((r * 255) / 31);
+      const green = Math.round((g * 255) / 63);
+      const blue = Math.round((b * 255) / 31);
       rgb565ToRgba[value] = (0xff000000 | (blue << 16) | (green << 8) | red) >>> 0;
     }
 
@@ -167,117 +155,18 @@
       consoleBox.scrollTop = consoleBox.scrollHeight;
     }
 
-    async function fetchFirmware(url) {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Firmware HTTP " + response.status);
-      const total = Number(response.headers.get("Content-Length") || 0);
-      if (!response.body) {
-        const bytes = new Uint8Array(await response.arrayBuffer());
-        $("progress").style.width = "100%";
-        return bytes;
-      }
-      const reader = response.body.getReader();
-      const chunks = [];
-      let loaded = 0;
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        loaded += value.length;
-        if (total) $("progress").style.width = Math.round(loaded * 100 / total) + "%";
-      }
-      const bytes = new Uint8Array(loaded);
-      let offset = 0;
-      for (const chunk of chunks) {
-        bytes.set(chunk, offset);
-        offset += chunk.length;
-      }
-      $("progress").style.width = "100%";
-      return bytes;
-    }
-
-    function readMemoryWord(address) {
-      const bytes = emu.read_memory(address, 4);
-      if (!(bytes instanceof Uint8Array) || bytes.length !== 4) {
-        throw new Error("Lecture mémoire ESP-EMU incomplète à 0x" + address.toString(16));
-      }
-      return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0, true);
-    }
-
-    function pollFramebuffer() {
-      if (!running || !emu || !framebufferSymbols) return;
-      try {
-        const seqAddress = Number.parseInt(framebufferSymbols.sequence_address, 16);
-        const pointerAddress = Number.parseInt(framebufferSymbols.front_pointer_address, 16);
-        const y1Address = Number.parseInt(framebufferSymbols.dirty_y1_address, 16);
-        const y2Address = Number.parseInt(framebufferSymbols.dirty_y2_address, 16);
-        const seqBefore = readMemoryWord(seqAddress);
-        if ((seqBefore & 1) !== 0 || seqBefore === lastFramebufferSeq) return;
-
-        const framebuffer = readMemoryWord(pointerAddress);
-        const dirtyY1 = readMemoryWord(y1Address);
-        const dirtyY2 = readMemoryWord(y2Address);
-        const seqCheck = readMemoryWord(seqAddress);
-        if (seqBefore !== seqCheck || (seqCheck & 1) !== 0) return;
-        if (!framebuffer) return;
-
-        const y1 = hasFramebufferFrame ? Math.max(0, Math.min(501, dirtyY1)) : 0;
-        const y2 = hasFramebufferFrame ? Math.max(y1, Math.min(502, dirtyY2)) : 502;
-        if (y2 <= y1) {
-          lastFramebufferSeq = seqCheck;
-          return;
-        }
-
-        const byteLength = (y2 - y1) * 410 * 2;
-        const pixels = framebufferBytes.subarray(0, byteLength);
-        const maxChunk = Number(framebufferSymbols.max_read_bytes || 4096);
-        for (let offset = 0; offset < byteLength; offset += maxChunk) {
-          const count = Math.min(maxChunk, byteLength - offset);
-          const chunk = emu.read_memory(framebuffer + y1 * 410 * 2 + offset, count);
-          if (!(chunk instanceof Uint8Array) || chunk.length !== count) {
-            throw new Error("Lecture PSRAM incomplète (" + offset + "/" + byteLength + " octets)");
-          }
-          pixels.set(chunk, offset);
-        }
-
-        const seqAfterCopy = readMemoryWord(seqAddress);
-        if (seqAfterCopy !== seqCheck || (seqAfterCopy & 1) !== 0) return;
-
-        // Conversion RGB565 accélérée par table de correspondance 16 bits.
-        const firstPixel = y1 * 410;
-        const pixelCount = (y2 - y1) * 410;
-        for (let i = 0, p = firstPixel; i < byteLength; i += 2, p++) {
-          const rgb565 = pixels[i] | (pixels[i + 1] << 8);
-          framebufferPixels32[p] = rgb565ToRgba[rgb565];
-        }
-        ctx.putImageData(framebufferImage, 0, 0, 0, y1, 410, y2 - y1);
-        lastFramebufferSeq = seqAfterCopy;
-        hasFramebufferFrame = true;
-        framebufferErrorShown = false;
-        $("frame-status").textContent = "PSRAM KGUI · séquence " + seqAfterCopy;
-        $("sync").disabled = false;
-      } catch (error) {
-        if (!framebufferErrorShown) {
-          log("[framebuffer mémoire] " + (error?.message || error));
-          framebufferErrorShown = true;
-        }
-      }
-    }
-
     function sendConsole(command) {
-      if (!uartSend) {
-        log("[bridge] Entrée UART0 indisponible: méthode ESP-EMU non identifiée");
+      if (!running) {
+        log("[bridge] UART0 indisponible avant le démarrage de KodeOS");
         return false;
       }
-      uartSend(command.endsWith("\n") ? command : command + "\n");
+      worker.postMessage({ type: "uart", data: command.endsWith("\n") ? command : command + "\n" });
       return true;
     }
 
     function syncTime() {
       if (!running || !timeSyncReady) return;
-      const isoUtc = new Date().toISOString().slice(0, 19) + "Z";
-      sendConsole('time set="' + isoUtc + '"');
-      sendConsole("time");
+      worker.postMessage({ type: "sync-time", iso: new Date().toISOString() });
     }
 
     function processLine(line) {
@@ -291,15 +180,15 @@
         log("[horloge] le firmware signale une horloge non réglée");
         return;
       }
-      if (text.toLowerCase().includes("console up ('help' for commands)") && !firstAssetsSeen) {
-        firstAssetsSeen = true;
+      if (text.toLowerCase().includes("console up ('help' for commands)") && !firstConsoleReady) {
+        firstConsoleReady = true;
         timeSyncReady = true;
         log(text);
         syncTime();
         if (timeTimer) clearInterval(timeTimer);
         timeTimer = setInterval(syncTime, 30000);
         log("[console] prête · invite KodeOS détectée · synchronisation UTC activée");
-        log("[framebuffer] Lecture directe de la PSRAM activée via ESP-EMU read_memory()");
+        log("[framebuffer] Lecture PSRAM KGUI déportée dans le Worker");
         return;
       }
       log(text);
@@ -311,62 +200,82 @@
     }
 
     function boardInput(kind) {
-      if (boardWorker) boardWorker.postMessage({ type: "input", kind });
+      worker.postMessage({ type: "board-input", kind });
     }
 
-    async function start() {
-      if (running) return;
-      $("start").disabled = true;
-      setStatus("Chargement du runtime ESP-EMU…", "warn");
-      try {
-        await init();
-        emu = new WasmEmulator("esp32p4");
-        const firmware = await fetchFirmware("./firmware/kodeos-flash.bin");
-        log("[emu] Firmware fusionné chargé (" + firmware.length.toLocaleString("fr-FR") + " octets)");
-        emu.load_default_rom();
-        await emu.load_firmware(firmware);
-        const symbolsResponse = await fetch("./framebuffer-symbols.json");
-        if (!symbolsResponse.ok) throw new Error("Table des symboles framebuffer HTTP " + symbolsResponse.status);
-        framebufferSymbols = await symbolsResponse.json();
-        if (framebufferSymbols.width !== 410 || framebufferSymbols.height !== 502 ||
-            framebufferSymbols.bytes_per_pixel !== 2 || !framebufferSymbols.front_pointer_address) {
-          throw new Error("Table des symboles framebuffer invalide");
-        }
-        log("[framebuffer] Symboles ELF chargés · accès PSRAM direct");
-        // ESP-EMU v1.0.0 exposes the UART RX bridge as uart_input(Uint8Array).
-        // This is the real console input path used for KodeOS time sync and screenshots.
-        const encoder = new TextEncoder();
-        uartSend = (text) => emu.uart_input(encoder.encode(text));
-
-        boardWorker = new Worker("./esp-emu/part-worker.js", { type: "module" });
-        const channel = new MessageChannel();
-        pump = new CosimPump(emu, {
-          kodeboard: { port: channel.port1, worker: boardWorker }
-        });
-        boardWorker.postMessage({
-          type: "start",
-          port: channel.port2,
-          module: "./parts/kode_board.wasm",
-          config: { pins: { SCL: 5, SDA: 4 } }
-        }, [channel.port2]);
-        if (!(await pump.waitForDevice(5000))) {
-          throw new Error("La carte virtuelle Kode Dot ne s'est pas attachée au bus I2C en 5 secondes.");
-        }
-        setStatus("ESP32-P4 démarré · attente du démarrage KodeOS…", "ok");
-        pump.start(onOutput, (error) => {
-          setStatus("Erreur ESP-EMU", "warn");
-          log("[emu error] " + error);
-        });
-        running = true;
-        $("sync").disabled = false;
-        if (framebufferTimer) clearInterval(framebufferTimer);
-        // Fréquence conservatrice pour ne pas concurrencer le cœur ESP-EMU.
-        framebufferTimer = setInterval(pollFramebuffer, 250);
-      } catch (error) {
-        setStatus("Échec du démarrage", "warn");
-        log("[erreur] " + (error?.stack || error));
-        $("start").disabled = false;
+    function drawRgb565Frame(message) {
+      const bytes = new Uint8Array(message.data);
+      const firstPixel = message.y1 * 410;
+      for (let i = 0, p = firstPixel; i < bytes.length; i += 2, p++) {
+        const rgb565 = bytes[i] | (bytes[i + 1] << 8);
+        fallbackPixels32[p] = rgb565ToRgba[rgb565];
       }
+      ctx.putImageData(fallbackImage, 0, 0, 0, message.y1, 410, message.y2 - message.y1);
+      $("frame-status").textContent = "PSRAM KGUI · séquence " + message.seq;
+      $("sync").disabled = false;
+    }
+
+    worker.onmessage = (event) => {
+      const message = event.data || {};
+      switch (message.type) {
+        case "status":
+          setStatus(message.message || "Démarrage de KodeOS…", "warn");
+          break;
+        case "progress":
+          if (message.total) {
+            $("progress").style.width = Math.round(message.loaded * 100 / message.total) + "%";
+          }
+          break;
+        case "log":
+          log(message.message);
+          break;
+        case "uart":
+          onOutput(message.data);
+          break;
+        case "ready":
+          running = true;
+          $("sync").disabled = false;
+          $("progress").style.width = "100%";
+          setStatus("ESP32-P4 démarré · KodeOS en cours d’exécution", "ok");
+          log("[worker] ESP32-P4 et carte I2C isolés du fil principal du navigateur");
+          break;
+        case "frame":
+          try {
+            ctx.drawImage(message.image, 0, 0);
+            message.image.close?.();
+            $("frame-status").textContent = "PSRAM KGUI · séquence " + message.seq;
+            $("sync").disabled = false;
+            framebufferErrorShown = false;
+          } catch (error) {
+            if (!framebufferErrorShown) {
+              log("[rendu écran] " + (error?.message || error));
+              framebufferErrorShown = true;
+            }
+          }
+          break;
+        case "frame-rgb565":
+          drawRgb565Frame(message);
+          break;
+        case "error":
+          setStatus("Erreur du simulateur", "warn");
+          log(message.message || "Erreur inconnue du Worker");
+          if (!running) $("start").disabled = false;
+          break;
+      }
+    };
+
+    worker.onerror = (event) => {
+      setStatus("Erreur du moteur ESP-EMU", "warn");
+      log("[worker] " + (event.message || "échec du Worker"));
+      $("start").disabled = false;
+    };
+
+    async function start() {
+      if (startRequested) return;
+      startRequested = true;
+      $("start").disabled = true;
+      setStatus("Chargement du moteur ESP-EMU dans un Worker…", "warn");
+      worker.postMessage({ type: "start" });
     }
 
     $("start").addEventListener("click", start);
@@ -377,8 +286,25 @@
       const y = Math.max(0, Math.min(501, Math.floor((event.clientY - rect.top) * 502 / rect.height)));
       boardInput("tap:" + x + "," + y);
     });
+
     document.querySelectorAll("[data-input]").forEach(button => {
-      button.addEventListener("pointerdown", () => boardInput(button.dataset.input));
+      const kind = button.dataset.input;
+      let activePointer = null;
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        activePointer = event.pointerId;
+        try { button.setPointerCapture(event.pointerId); } catch {}
+        boardInput(kind + ":down");
+      });
+      const release = (event) => {
+        if (activePointer === null) return;
+        if (event && event.pointerId !== undefined && event.pointerId !== activePointer) return;
+        activePointer = null;
+        boardInput(kind + ":up");
+      };
+      button.addEventListener("pointerup", release);
+      button.addEventListener("pointercancel", release);
+      button.addEventListener("lostpointercapture", release);
     });
 
     start();
