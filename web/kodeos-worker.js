@@ -63,17 +63,32 @@ async function fetchFirmware(url) {
     report("progress", { loaded: bytes.length, total: total || bytes.length });
     return bytes;
   }
+
   const reader = response.body.getReader();
-  const chunks = [];
+  // Preallocate when the server provides Content-Length: this avoids keeping
+  // every network chunk plus a second full firmware copy in memory on mobile.
+  let bytes = total > 0 ? new Uint8Array(total) : null;
+  const chunks = bytes ? null : [];
   let loaded = 0;
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
-    chunks.push(value);
+    if (bytes) {
+      if (loaded + value.length > bytes.length) {
+        const expanded = new Uint8Array(Math.max(loaded + value.length, bytes.length * 2));
+        expanded.set(bytes.subarray(0, loaded));
+        bytes = expanded;
+      }
+      bytes.set(value, loaded);
+    } else {
+      chunks.push(value);
+    }
     loaded += value.length;
     report("progress", { loaded, total });
   }
-  const bytes = new Uint8Array(loaded);
+
+  if (bytes) return bytes.subarray(0, loaded);
+  bytes = new Uint8Array(loaded);
   let offset = 0;
   for (const chunk of chunks) {
     bytes.set(chunk, offset);
