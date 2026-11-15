@@ -1,4 +1,4 @@
-const { app, BrowserWindow, protocol, session } = require("electron");
+const { app, BrowserWindow, protocol, session, ipcMain, shell } = require("electron");
 const fsSync = require("node:fs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -33,6 +33,32 @@ const MIME_TYPES = {
   ".wasm": "application/wasm"
 };
 
+const sdRoot = () => path.join(app.getPath("userData"), "Carte_SD");
+function safeSdPath(name) {
+  if (typeof name !== "string" || !name || name.startsWith("/") || name.includes("\\") ||
+      name.split("/").some(part => !part || part === "." || part === "..")) throw new Error("Chemin SD invalide");
+  const root = sdRoot();
+  const target = path.resolve(root, name);
+  if (!target.startsWith(root + path.sep)) throw new Error("Chemin SD interdit");
+  return target;
+}
+function registerSdBridge() {
+  ipcMain.handle("sd:list", async () => {
+    await fs.mkdir(sdRoot(), { recursive: true });
+    return (await fs.readdir(sdRoot(), { withFileTypes: true })).map(e => ({ name: e.name, directory: e.isDirectory() }));
+  });
+  ipcMain.handle("sd:write", async (_event, name, bytes) => {
+    const target = safeSdPath(name);
+    if (!(bytes instanceof ArrayBuffer) || bytes.byteLength > 67108864) throw new Error("Fichier invalide (limite 64 Mio)");
+    await fs.writeFile(target, Buffer.from(bytes));
+    return { name, size: bytes.byteLength };
+  });
+  ipcMain.handle("sd:open", async () => {
+    await fs.mkdir(sdRoot(), { recursive: true });
+    await shell.openPath(sdRoot());
+    return sdRoot();
+  });
+}
 function getSiteDirectory() {
   return app.isPackaged
     ? path.join(process.resourcesPath, "site")
@@ -77,6 +103,7 @@ async function createWindow() {
   const indexPath = path.join(siteDirectory, "index.html");
   await fs.access(indexPath);
 
+  registerSdBridge();
   const appSession = session.defaultSession;
   appSession.webRequest.onBeforeRequest(
     { urls: ["http://*/*", "https://*/*", "ws://*/*", "wss://*/*"] },
@@ -99,7 +126,8 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      webSecurity: true
+      webSecurity: true,
+      preload: path.join(__dirname, "preload.cjs")
     }
   });
 
