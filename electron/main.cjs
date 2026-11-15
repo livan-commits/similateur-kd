@@ -251,7 +251,7 @@ async function createWindow() {
   if (smokeTest) await verifyOfflineBoot(window);
 }
 
-async function verifyFlashPersistence(window, state) {
+async function verifyFlashPersistence(window, state, finish) {
   try {
     const acknowledged = await new Promise((resolve) => {
       const onSaved = (event) => {
@@ -268,7 +268,7 @@ async function verifyFlashPersistence(window, state) {
       window.webContents.send("app:save-flash");
     });
     if (!acknowledged) {
-      finishOfflineFailure("Le pont de sauvegarde de la flash n'a pas répondu.", state);
+      finish(1, { reason: "Le pont de sauvegarde de la flash n'a pas répondu.", state });
       return;
     }
     const imageSize = fsSync.statSync(flashPath()).size;
@@ -277,33 +277,26 @@ async function verifyFlashPersistence(window, state) {
         metadata.size !== imageSize ||
         typeof metadata.firmwareHash !== "string" ||
         metadata.firmwareHash.length !== 64) {
-      finishOfflineFailure("L'image de flash persistante est incomplète ou invalide.", state);
+      finish(1, { reason: "L'image de flash persistante est incomplète ou invalide.", state });
       return;
     }
     const restored = await window.webContents.executeJavaScript(
       "window.kodeDotSD.loadFlash().then(value => ({ size: value?.data?.byteLength || 0, firmwareHash: value?.firmwareHash || '' }))"
     );
     if (restored.size !== imageSize || restored.firmwareHash !== metadata.firmwareHash) {
-      finishOfflineFailure("La relecture de la sauvegarde flash ne correspond pas au fichier écrit.", state);
+      finish(1, { reason: "La relecture de la sauvegarde flash ne correspond pas au fichier écrit.", state });
       return;
     }
-    finishOfflineSuccess({
+    finish(0, {
       reason: "Démarrage hors ligne, framebuffer KGUI et persistance de la flash interne vérifiés.",
       state,
       flashPersistence: { size: imageSize, firmwareHash: metadata.firmwareHash, restored: true }
     });
   } catch (error) {
-    finishOfflineFailure(error?.message || String(error), state);
+    finish(1, { reason: error?.message || String(error), state });
   }
 }
 
-function finishOfflineFailure(reason, state) {
-  finish(1, { reason, state });
-}
-
-function finishOfflineSuccess(detail) {
-  finish(0, detail);
-}
 
 function verifyOfflineBoot(window) {
   return new Promise((resolve) => {
@@ -365,7 +358,7 @@ function verifyOfflineBoot(window) {
           if (externalRequestCount !== 0) {
             finish(1, { reason: "Une requête externe a été tentée.", state });
           } else {
-            verifyFlashPersistence(window, state);
+            verifyFlashPersistence(window, state, finish);
           }
         }
       } catch (error) {
