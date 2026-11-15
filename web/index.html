@@ -150,13 +150,24 @@
       $("status-dot").className = "dot" + (kind ? " " + kind : "");
     }
 
-    function log(line) {
-      if (!line) return;
-      consoleBox.textContent += line + "\n";
+    const pendingLogs = [];
+    let logFlushTimer = 0;
+    function flushLogs() {
+      logFlushTimer = 0;
+      if (!pendingLogs.length) return;
+      consoleBox.textContent += pendingLogs.join("\n") + "\n";
+      pendingLogs.length = 0;
       if (consoleBox.textContent.length > 22000) {
         consoleBox.textContent = consoleBox.textContent.slice(-16000);
       }
       consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    function log(line) {
+      if (!line) return;
+      pendingLogs.push(String(line));
+      // Batch UART output so bursts do not trigger a layout/scroll for every line.
+      if (!logFlushTimer) logFlushTimer = setTimeout(flushLogs, 80);
     }
 
     function sendConsole(command) {
@@ -272,7 +283,7 @@
           break;
         case "frame":
           try {
-            ctx.drawImage(message.image, 0, 0);
+            ctx.drawImage(message.image, 0, message.fullFrame ? 0 : (message.y1 || 0));
             message.image.close?.();
             $("frame-status").textContent = "PSRAM KGUI · séquence " + message.seq;
             $("sync").disabled = false;
