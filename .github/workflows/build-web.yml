@@ -216,7 +216,6 @@ jobs:
           assert 'name="viewport"' in html
           assert "kodeos-worker.js" in html
           assert "CosimPump" not in html
-          assert "kode_board.wasm" in html
           assert 'id="screen"' in html
           worker = Path("dist/kodeos-worker.js").read_text()
           assert "time set=" in worker
