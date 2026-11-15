@@ -74,7 +74,7 @@ public final class MainActivity extends Activity {
         });
         webView.setWebChromeClient(new WebChromeClient());
         setContentView(webView);
-        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html?local-dual=1");
     }
 
     @Override
