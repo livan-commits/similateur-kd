@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: kodediy/KodeOS
-          ref: 9bcfdb71b763ee7b5c14106358643ea611fc97db
+          ref: d2443ddc07b238a24f1f4ebe1b0b8e4a09f34b1d
           path: upstream
           submodules: recursive
           fetch-depth: 1
@@ -36,7 +36,7 @@ jobs:
       - name: Verify pinned SDK revision
         shell: bash
         run: |
-          expected="1841cc8c13d4b2e3e4d7288b40cdac5de207a133"
+          expected="66f2a597596c7f19d651207158be9efe305fdf33"
           actual="$(git -C upstream/sdk rev-parse HEAD)"
           echo "Expected SDK: $expected"
           echo "Actual SDK:   $actual"
@@ -194,8 +194,8 @@ jobs:
           cat > dist/versions.json <<EOF
           {
             "project": "similateur-kd",
-            "kodeos_source_commit": "9bcfdb71b763ee7b5c14106358643ea611fc97db",
-            "kodeos_sdk_commit": "1841cc8c13d4b2e3e4d7288b40cdac5de207a133",
+            "kodeos_source_commit": "d2443ddc07b238a24f1f4ebe1b0b8e4a09f34b1d",
+            "kodeos_sdk_commit": "66f2a597596c7f19d651207158be9efe305fdf33",
             "renderer": "official ESP-EMU browser runtime executing pinned KodeOS ESP32-P4 firmware; real KGUI RGB565 framebuffer read directly from the firmware's PSRAM through ESP-EMU read_memory",
             "firmware": "KodeOS ESP32-P4 merged flash image including storage at 0x1800000; simulator-only headless display overlay",
             "c5": "KodeOS-pinned ESP32-C5 coprocessor firmware included in storage; C5 runtime not yet separately emulated in this web build",
@@ -215,7 +215,7 @@ jobs:
           from pathlib import Path
 
           manifest = json.loads(Path("dist/versions.json").read_text())
-          assert manifest["kodeos_sdk_commit"] == "1841cc8c13d4b2e3e4d7288b40cdac5de207a133"
+          assert manifest["kodeos_sdk_commit"] == "66f2a597596c7f19d651207158be9efe305fdf33"
           assert "ESP-EMU" in manifest["renderer"] and "real KGUI" in manifest["renderer"]
           symbols = json.loads(Path("dist/framebuffer-symbols.json").read_text())
           assert symbols["width"] == 410 and symbols["height"] == 502

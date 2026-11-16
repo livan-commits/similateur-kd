@@ -1,32 +1,47 @@
-# Similateur Kode Dot Web
+# Simulateur Kode Dot Web
 
-Projet indépendant pour exécuter le véritable firmware KodeOS ESP32-P4 dans Chrome, avec les sources publiques KodeDIY et le moteur officiel ESP-EMU. Ce dépôt n'est pas un produit officiel KodeDIY.
+Projet indépendant qui exécute le véritable firmware KodeOS ESP32-P4 dans le navigateur avec le moteur officiel ESP-EMU. Ce dépôt n'est pas un produit officiel KodeDIY.
 
-## Objectif
+## Site public
 
-Utiliser le simulateur directement dans le navigateur, sur téléphone ou ordinateur, sans Termux ni installation Android.
+[Ouvrir le simulateur KodeOS Web](https://livan-commits.github.io/similateur-kd/)
 
-## Ce qui fonctionne dans cette version
+Le site fonctionne dans un navigateur moderne, sans Termux ni installation locale.
 
-- L'image flash KodeOS est construite depuis le commit KodeOS épinglé et le commit exact de son SDK.
-- ESP-EMU v1.0.0 exécute le firmware ESP32-P4 dans le navigateur.
-- Le code réel KGUI/LVGL du firmware dessine dans deux framebuffers RGB565 en PSRAM. Le patch headless remplace uniquement la sortie physique CO5300/MIPI-DSI, qui n'existe pas dans le navigateur.
-- Les adresses des symboles mémoire sont extraites du véritable ELF. Le navigateur lit le framebuffer directement dans la mémoire émulée avec l'API `read_memory` d'ESP-EMU, puis affiche ces pixels sur un canvas 410×502. Le canvas n'est pas une maquette de l'interface : il présente les pixels produits par KGUI.
-- Un composant virtuel WebAssembly modélise les périphériques I²C TCA6408A (0x20) et CST820 (0x15) nécessaires au chemin d'affichage et d'entrée.
-- Après le chargement des ressources KGUI, l'heure UTC du navigateur est envoyée à KodeOS par la console UART0. Le navigateur demande ensuite l'état de l'horloge au firmware et répète la synchronisation toutes les 30 secondes.
+## Ce qui est réellement exécuté
+
+- Le firmware KodeOS est compilé depuis un commit officiel KodeOS fixe et le commit exact de son sous-module SDK.
+- ESP-EMU v1.0.0 exécute le firmware ESP32-P4 dans un Worker du navigateur.
+- KodeOS démarre ses Active Objects et son interface KGUI. Le KUI/LVGL officiel dessine dans deux framebuffers RGB565 en PSRAM.
+- Le navigateur lit ces pixels dans la mémoire de l'ESP32-P4 émulé via l'API `read_memory` d'ESP-EMU. Le canvas 410 × 502 n'est que la surface d'affichage des pixels réels ; il ne dessine pas une imitation de KGUI.
+- Le patch headless remplace uniquement la sortie physique CO5300/MIPI-DSI par les framebuffers PSRAM. Le code de rendu KGUI/KUI reste celui du firmware officiel.
+- Une carte virtuelle WebAssembly modélise le TCA6408A (0x20) et le contrôleur tactile CST820 (0x15) nécessaires au chemin d'affichage et d'entrée.
+
+## Vérification navigateur
+
+Le workflow « Build and publish KodeOS Web Emulator » déploie le site puis lance un vrai Chromium automatisé sur l'URL publique. Le test attend le démarrage ESP32-P4/KodeOS, envoie `gui_info` par UART0 et exige `lvgl=on`, une séquence framebuffer PSRAM d'au moins 4, une image 410 × 502 avec des pixels non noirs, et aucune erreur JavaScript, console ou requête réseau. Une capture d'écran du navigateur est conservée comme artefact du workflow.
+
+## Versions officielles épinglées pour le site
+
+- KodeOS : commit `d2443ddc07b238a24f1f4ebe1b0b8e4a09f34b1d`
+- `kode-sdk` : commit `66f2a597596c7f19d651207158be9efe305fdf33`, exactement celui référencé par le sous-module du commit KodeOS ci-dessus
+- ESP-IDF : v6.1
+- KUI : 0.1.1, LVGL 9.6.0~1
+- ESP-EMU : v1.0.0
+- Écran : 410 × 502, RGB565
+
+Le manifeste publié `versions.json` contient les commits et le périmètre exacts du build.
 
 ## Limites connues
 
-- Ce n'est pas encore une émulation complète de tous les composants du Kode Dot. Le contrôleur MIPI-DSI est contourné ; l'audio, la carte SD, l'IMU, le NFC/RFID, les vibrations, l'IR et plusieurs autres périphériques ne sont pas encore modélisés.
-- Le lecteur NFC ST25R3916B est compilé hors de l'image que l'émulateur démarre (`CONFIG_KODEOS_NFC=n`, posé par le patch headless) : sa sonde SPI2/IRQ ne se termine jamais dans ESP-EMU et figeait la marche de boot avant le démarrage de la console. Le matériel réel n'est pas concerné.
-- Le firmware ESP32-C5 est inclus dans l'image de stockage, mais le coprocesseur C5 n'est pas encore exécuté comme une seconde puce indépendante dans le navigateur.
-- La capacité PSRAM du modèle navigateur doit encore être vérifiée par rapport aux 32 Mo du matériel réel. Le framebuffer utilise moins d'un mégaoctet, mais cette différence peut compter pour des applications plus gourmandes.
-- La lecture du framebuffer est actuellement effectuée par snapshots complets quatre fois par seconde ; ce compromis privilégie la cohérence des pixels pendant que le pont mémoire est validé.
+Ce n'est pas encore une émulation complète de toute la carte Kode Dot :
 
-## Sources officielles et versions épinglées
+- Le contrôleur physique CO5300/MIPI-DSI est contourné par le backend headless ; les pixels KGUI eux-mêmes sont bien produits par le firmware.
+- Le firmware ESP32-C5 est construit et fourni comme image, mais le coprocesseur C5 n'est pas encore lancé comme une seconde puce dans cette version Web. Le Wi-Fi/Bluetooth et la liaison inter-puces SDIO ne sont donc pas annoncés comme fonctionnels.
+- Le TCA6408A et le CST820 sont modélisés par une carte virtuelle ; ce n'est pas une reproduction électrique complète.
+- La carte microSD, l'IMU, le NFC/RFID, le codec audio, les vibrations, l'IR, les LED et les circuits de gestion de batterie ne sont pas encore modélisés. Les fonctions qui dépendent de ces périphériques restent indisponibles.
+- Le NFC est désactivé dans ce profil headless (`CONFIG_KODEOS_NFC=n`) : son matériel SPI/IRQ n'a pas encore de modèle virtuel.
+- La capacité mémoire et les performances de l'émulateur navigateur ne sont pas encore validées comme identiques à celles d'une carte physique.
+- L'exécution d'applications tierces n'est pas encore validée par ce test de démarrage et d'affichage.
 
-- [KodeOS](https://github.com/kodediy/KodeOS) — commit `9bcfdb71b763ee7b5c14106358643ea611fc97db`
-- [Kode SDK](https://github.com/kodediy/kode-sdk) — commit `1841cc8c13d4b2e3e4d7288b40cdac5de207a133`
-- [ESP-EMU](https://github.com/espressif/esp-emulator) — v1.0.0
-
-Les licences et avis de copyright des projets amont restent inchangés.
+Le workflow « Build native KGUI host simulator » est une cible distincte de test SDL2/Linux ; ce n'est pas le moteur utilisé par le site public.

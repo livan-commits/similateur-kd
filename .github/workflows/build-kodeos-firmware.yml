@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: kodediy/KodeOS
-          ref: 9bcfdb71b763ee7b5c14106358643ea611fc97db
+          ref: d2443ddc07b238a24f1f4ebe1b0b8e4a09f34b1d
           submodules: recursive
           fetch-depth: 1
 
@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="1841cc8c13d4b2e3e4d7288b40cdac5de207a133"
+          expected="66f2a597596c7f19d651207158be9efe305fdf33"
           actual="$(git -C sdk rev-parse HEAD)"
           echo "KodeOS commit: $(git rev-parse HEAD)"
           echo "Expected SDK:  $expected"
