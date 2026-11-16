@@ -196,12 +196,44 @@ jobs:
             "project": "similateur-kd",
             "kodeos_source_commit": "d2443ddc07b238a24f1f4ebe1b0b8e4a09f34b1d",
             "kodeos_sdk_commit": "66f2a597596c7f19d651207158be9efe305fdf33",
+            "kodeos_version": "0.1.1",
+            "esp_idf": "v6.1",
+            "target": "ESP32-P4",
+            "kui_version": "0.1.1",
+            "lvgl": "9.6.0~1",
+            "esp_emu": "v1.0.0",
             "renderer": "official ESP-EMU browser runtime executing pinned KodeOS ESP32-P4 firmware; real KGUI RGB565 framebuffer read directly from the firmware's PSRAM through ESP-EMU read_memory",
             "firmware": "KodeOS ESP32-P4 merged flash image including storage at 0x1800000; simulator-only headless display overlay",
-            "c5": "KodeOS-pinned ESP32-C5 coprocessor firmware included in storage; C5 runtime not yet separately emulated in this web build",
-            "esp_emu": "v1.0.0",
-            "display": "410x502 RGB565 framebuffer rendered by real KGUI and polled from PSRAM by a dedicated Web Worker using ELF-exported symbols; CO5300 MIPI-DSI bypassed",
-            "virtual_parts": "TCA6408A at I2C 0x20 and CST820 at I2C 0x15; GPIO5 SCL, GPIO4 SDA, GPIO6 IRQ, TOP key on GPIO35"
+            "c5_firmware": "KodeOS-pinned ESP32-C5 firmware built and included in the storage image; separate c5-flash.bin also published",
+            "c5_runtime_emulated": false,
+            "display": "410x502 RGB565 framebuffer rendered by real KGUI and polled from PSRAM by a dedicated Web Worker using ELF-exported symbols; physical CO5300 MIPI-DSI bypassed",
+            "virtual_parts": "TCA6408A at I2C 0x20 and CST820 at I2C 0x15; GPIO5 SCL, GPIO4 SDA, GPIO6 IRQ, TOP key on GPIO35",
+            "emulated_components": [
+              "ESP32-P4 firmware runtime",
+              "KodeOS 0.1.1 Active Objects and services that boot under ESP-EMU",
+              "KGUI and KUI/LVGL rendering from the official firmware",
+              "RGB565 framebuffer in emulated PSRAM",
+              "virtual TCA6408A and CST820 I2C devices",
+              "UART0 console and browser UTC clock synchronization"
+            ],
+            "not_emulated": [
+              "ESP32-C5 runtime and inter-chip SDIO link",
+              "CO5300 physical MIPI-DSI controller",
+              "microSD card",
+              "IMU sensors",
+              "NFC/RFID hardware (NFC disabled with CONFIG_KODEOS_NFC=n in this profile)",
+              "audio codec and speaker path",
+              "haptic driver",
+              "IR transceiver",
+              "RGB LED driver",
+              "battery gauge and PMIC",
+              "third-party application execution is not validated"
+            ],
+            "profile_notes": [
+              "Firmware boot reports 16 MB PSRAM; parity with physical-board memory capacity and timing is not yet validated",
+              "Firmware reports no official hardware revision loaded in this emulated profile"
+            ],
+            "browser_smoke_test": "Playwright Chromium against the public Pages URL; requires ESP32-P4/KodeOS boot, UART0 gui_info with lvgl=on, framebuffer sequence >=4, 410x502 canvas with >20 non-black pixels, and no JavaScript, console, or failed-network errors"
           }
           EOF
           cat dist/versions.json
@@ -215,7 +247,15 @@ jobs:
           from pathlib import Path
 
           manifest = json.loads(Path("dist/versions.json").read_text())
+          assert manifest["kodeos_source_commit"] == "d2443ddc07b238a24f1f4ebe1b0b8e4a09f34b1d"
           assert manifest["kodeos_sdk_commit"] == "66f2a597596c7f19d651207158be9efe305fdf33"
+          assert manifest["kodeos_version"] == "0.1.1"
+          assert manifest["esp_idf"] == "v6.1"
+          assert manifest["kui_version"] == "0.1.1"
+          assert manifest["lvgl"] == "9.6.0~1"
+          assert manifest["esp_emu"] == "v1.0.0"
+          assert manifest["c5_runtime_emulated"] is False
+          assert any("CO5300" in item for item in manifest["not_emulated"])
           assert "ESP-EMU" in manifest["renderer"] and "real KGUI" in manifest["renderer"]
           symbols = json.loads(Path("dist/framebuffer-symbols.json").read_text())
           assert symbols["width"] == 410 and symbols["height"] == 502
