@@ -71,7 +71,7 @@ try {
     await page.waitForFunction(() => window.__kdWorkers?.some(w => w.url.includes("kodeos-worker.js")), null, { timeout: 15000, polling: 100 });
     await page.evaluate(() => {
       const worker = window.__kdWorkers.find(w => w.url.includes("kodeos-worker.js"));
-      worker.instance.postMessage({ type: "uart", data: "gui_info\\n" });
+      worker.instance.postMessage({ type: "uart", data: "gui_info\n" });
     });
     await page.waitForFunction(() => {
       const output = document.querySelector("#console")?.textContent || "";
@@ -79,7 +79,7 @@ try {
     }, null, { timeout: 20000, polling: 250 });
     await page.waitForFunction(() => {
       const frame = document.querySelector("#frame-status")?.textContent || "";
-      const match = frame.match(/PSRAM KGUI · séquence (\\d+)/);
+      const match = frame.match(/PSRAM KGUI · séquence (\d+)/);
       return match && Number(match[1]) >= 4;
     }, null, { timeout: 45000, polling: 250 });
   } catch (error) { await diagnostics(error.message); throw error; }
