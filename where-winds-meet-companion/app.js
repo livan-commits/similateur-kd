@@ -51,6 +51,29 @@ let currentView="overview";function whichCurrent(){return currentView;}function 
 function bind(){view.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>render(b.dataset.go));view.querySelectorAll("[data-check]").forEach(b=>b.onchange=()=>{data.checks[b.dataset.check]=b.checked;save();});view.querySelectorAll("[data-quest]").forEach(b=>b.onchange=()=>{data.quests[+b.dataset.quest].done=b.checked;save();});const q=view.querySelector("#quest-form");if(q)q.onsubmit=e=>{e.preventDefault();data.quests.push({name:q.name.value,done:false});save();render("quests");};const j=view.querySelector("#journal-form");if(j)j.onsubmit=e=>{e.preventDefault();if(j.note.value.trim()){const heading=j.noteTitle?.value.trim();data.journal.push({note:(heading?heading+" — ":"")+j.note.value.trim(),date:new Date().toLocaleDateString("fr-FR")});save();render(whichCurrent());}};const bs=view.querySelector("#boss-search"),br=view.querySelector("#boss-region");const filterBosses=()=>{let n=0;view.querySelectorAll(".boss-card").forEach(c=>{const ok=(!bs?.value||c.dataset.search.includes(bs.value.toLowerCase()))&&(!br?.value||c.dataset.region===br.value);c.hidden=!ok;if(ok)n++;});const count=view.querySelector("#boss-count");if(count)count.textContent=n+" boss affichés";};if(bs)bs.oninput=filterBosses;if(br)br.onchange=filterBosses;view.querySelectorAll("[data-boss-note]").forEach(btn=>btn.onclick=()=>{const boss=bossData[+btn.dataset.bossNote];const t=j?.querySelector("[name=noteTitle]");if(t)t.value=boss.name; j?.querySelector("[name=note]")?.focus();});const b=view.querySelector("#build-form");if(b)b.onsubmit=e=>{e.preventDefault();data.builds.push({name:b.name.value,details:b.details.value});save();render("builds");};if(window.wwmAccountBind)window.wwmAccountBind(view);}
 document.querySelector("#nav").onclick=e=>{const b=e.target.closest("[data-view]");if(b)render(b.dataset.view);};
 document.querySelector("#export-btn").onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="where-winds-meet-progression.json";a.click();URL.revokeObjectURL(a.href);};
+document.querySelector("#import-btn").onclick=()=>document.querySelector("#import-file").click();
+document.querySelector("#import-file").onchange=async e=>{
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  const state=document.querySelector("#save-state");
+  try{
+    const incoming=JSON.parse(await file.text());
+    if(!incoming||typeof incoming!=="object"||Array.isArray(incoming))throw new Error("Le fichier doit contenir un objet JSON.");
+    if(incoming.quests!==undefined&&!Array.isArray(incoming.quests))throw new Error("Le champ quests doit être une liste.");
+    if(incoming.journal!==undefined&&!Array.isArray(incoming.journal))throw new Error("Le champ journal doit être une liste.");
+    if(incoming.builds!==undefined&&!Array.isArray(incoming.builds))throw new Error("Le champ builds doit être une liste.");
+    if(incoming.checks!==undefined&&(!incoming.checks||typeof incoming.checks!=="object"||Array.isArray(incoming.checks)))throw new Error("Le champ checks doit être un objet.");
+    const quests=new Map();
+    (incoming.quests||[]).concat(data.quests||[]).forEach(q=>{if(q&&q.name){const key=String(q.name).trim().toLowerCase();if(key)quests.set(key,q);}});
+    const journal=new Map();
+    (incoming.journal||[]).concat(data.journal||[]).forEach(j=>{if(j)journal.set(String(j.date||"")+"|"+String(j.note||""),j);});
+    const builds=new Map();
+    (incoming.builds||[]).concat(data.builds||[]).forEach(v=>{if(v)builds.set(String(v.name||"")+"|"+String(v.details||""),v);});
+    data={quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:Object.assign({},incoming.checks||{},data.checks||{}),builds:Array.from(builds.values())};
+    save();render(currentView);
+    if(state)state.textContent="● Sauvegarde importée et fusionnée";
+  }catch(error){if(state)state.textContent="● Import impossible : "+error.message;}
+  e.target.value="";
+};
 window.wwmDataApi={getData:()=>data,setData:value=>{data=value;},saveLocal:()=>{localStorage.setItem(KEY,JSON.stringify(data));render(currentView);},render:render,getView:()=>currentView};
 render();
 if("serviceWorker" in navigator && location.protocol!=="file:"){navigator.serviceWorker.register("./service-worker.js").catch(()=>{});}
