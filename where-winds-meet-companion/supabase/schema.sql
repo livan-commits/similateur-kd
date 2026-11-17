@@ -16,7 +16,7 @@ create table public.companion_state (
 alter table public.companion_state enable row level security;
 
 revoke all on table public.companion_state from anon, authenticated;
-grant select, insert, update, delete on table public.companion_state to authenticated;
+grant select on table public.companion_state to authenticated;
 
 create policy "Users can read their own companion state"
   on public.companion_state
@@ -63,6 +63,8 @@ create trigger companion_state_updated_at
 -- Atomic compare-and-swap write: concurrent devices cannot silently overwrite
 -- a snapshot based on an older revision. A NULL expected revision means "insert
 -- only if no row exists". A false result asks the client to re-read and merge.
+-- SECURITY DEFINER is required because authenticated clients have SELECT only;
+-- this function enforces auth.uid() explicitly and never accepts a caller user_id.
 create or replace function public.save_companion_state(
   p_expected_revision bigint,
   p_schema_version integer,
@@ -70,7 +72,7 @@ create or replace function public.save_companion_state(
 )
 returns table(saved boolean, revision bigint)
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $function$
 declare
