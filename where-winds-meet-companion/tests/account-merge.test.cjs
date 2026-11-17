@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v17"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v18"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -155,6 +155,12 @@ assert.ok(appSource.includes("(b.strategy||'')+' '+(b.sourceLabel||'')"), "boss 
 
 assert.ok(appSource.includes("Encyclopédie du Jianghu"), "codex placeholder must be replaced by the real encyclopedia");
 assert.ok(appSource.includes("PLANIFICATEUR PERSONNEL"), "build view must expose the structured planner");
+assert.ok(appSource.includes("const buildTemplates=["), "build planner must provide sourced starter templates");
+assert.ok(appSource.includes("DPS saignement · Strategic Sword + Heavenquaker Spear"), "build planner must include the documented bleed template");
+assert.ok(appSource.includes("Soutien · Vernal Umbrella + Inkwell Fan"), "build planner must include a support template");
+assert.ok(appSource.includes("template.onchange"), "selecting a template must populate the structured build form");
+assert.ok(appSource.includes("Source du modèle"), "saved build cards must retain the template source");
+
 assert.ok(appSource.includes('id="build-path"'), "build planner must let players select a Path");
 assert.ok(appSource.includes('id="build-inner"'), "build planner must support selecting Inner Ways");
 assert.ok(appSource.includes("innerWays:selectedInner"), "build saves must preserve selected Inner Ways");
