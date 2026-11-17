@@ -18,6 +18,8 @@ Independent native Kode Dot app plus Android companion. The Dot talks to the pho
 
 ## BLE protocol
 
+The service exposes three characteristics: command notifications, phone metadata writes, and binary album-art writes. The firmware requests a 512-byte maximum BLE value; the Android companion requests an MTU of 517.
+
 Dot to phone (notification, one byte):
 - `0x01`: play/pause
 - `0x02`: previous
@@ -28,6 +30,7 @@ Dot to phone (notification, one byte):
 Phone to Dot (write, UTF-8 text):
 - `title|artist|state` (state is `playing`, `paused`, or `idle`).
 - Payload is best-effort and truncated to the negotiated ATT payload size.
+- Artwork writes use packets `[0xA1, index_hi, index_lo, total_hi, total_lo, RGB565_LE…]`; 50 ordered packets carry one 112 × 112 image.
 
 ## Build the Kode app
 
@@ -55,8 +58,10 @@ Open `spotify-remote/android` in Android Studio and build the `app` debug varian
 
 ## Current limitations
 
-- The current native Dot UI displays the controls and basic status text; live title/artist rendering is not yet wired into the LVGL screen.
-- Album artwork transfer and display are not implemented in this build; this is the next feature being developed.
+- The Dot firmware now has a BLE artwork characteristic and a receiver for 112 × 112 RGB565 images, split into 507-byte payload chunks.
+- The Android companion reads album-art bitmaps from Spotify's active MediaSession, scales them to 112 × 112, converts them to RGB565, and queues BLE writes in order.
+- The LVGL screen has an image widget backed by the received RGB565 buffer. This implementation is awaiting CI validation and physical-device testing; Spotify may not expose artwork for every playback session.
+- The metadata line is still a compact title/artist/state text payload; detailed typography and progress display are future UI refinements.
 - Android MediaSession access depends on Android granting Notification access and Spotify exposing an active session.
 - Volume keys adjust the phone's music stream volume.
 - Physical-device BLE and playback tests are still required.
