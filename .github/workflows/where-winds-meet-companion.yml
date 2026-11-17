@@ -1,4 +1,4 @@
-name: Where Winds Meet Companion — Deploy
+name: Where Winds Meet Companion — Validate
 on:
   push:
     branches: [where-winds-meet-companion]
@@ -8,16 +8,11 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  pages: write
-  id-token: write
 concurrency:
-  group: pages-wwm-companion
+  group: wwm-companion-validate
   cancel-in-progress: true
 jobs:
-  build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,13 +22,13 @@ jobs:
           test -s where-winds-meet-companion/index.html
           test -s where-winds-meet-companion/styles.css
           test -s where-winds-meet-companion/app.js
+          test -s where-winds-meet-companion/manifest.webmanifest
+          test -s where-winds-meet-companion/service-worker.js
           node --check where-winds-meet-companion/app.js
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-      - name: Upload website
-        uses: actions/upload-pages-artifact@v3
+      - name: Package companion website
+        uses: actions/upload-artifact@v4
         with:
-          path: where-winds-meet-companion
-      - name: Deploy website
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: where-winds-meet-companion-web
+          path: where-winds-meet-companion/
+          if-no-files-found: error
+          retention-days: 30
