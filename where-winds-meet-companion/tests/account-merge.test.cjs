@@ -48,7 +48,10 @@ assert.deepEqual(Array.from(conflictMerged.deletedMapNoteIds),["deleted-note"],"
 
 const schema = fs.readFileSync("where-winds-meet-companion/supabase/schema.sql", "utf8");
 assert.ok(schema.includes("create or replace function public.save_companion_state"), "SQL must define the revision-checked save function");
-assert.ok(schema.includes("security invoker"), "the save function must respect caller RLS policies");
+assert.ok(schema.includes("security definer"), "the RPC must own the narrowly scoped write path");
+assert.ok(schema.includes("grant select on table public.companion_state to authenticated"), "authenticated clients must only read the table directly");
+assert.ok(!schema.includes("grant select, insert, update, delete on table public.companion_state to authenticated"), "authenticated clients must not bypass the revision-checked RPC");
+assert.ok(schema.includes("where current_state.user_id = auth.uid()"), "the privileged RPC must restrict writes to the authenticated user");
 assert.ok(schema.includes("as $function$") && schema.includes("$function$;"), "the SQL function body must use a valid dollar-quoted block");
 assert.ok(schema.includes("current_state.revision = p_expected_revision"), "updates must compare the expected revision atomically");
 assert.ok(schema.includes("on conflict (user_id) do nothing"), "first writes must not overwrite a row created concurrently");
