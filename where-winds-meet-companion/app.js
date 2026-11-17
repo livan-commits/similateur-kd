@@ -111,7 +111,8 @@ for(const p of codexPaths){
 
 const codexRegions=[
 {name:"Qinghe",subtitle:"Région · disponible au lancement",description:"Région de départ. Le catalogue public ne donne pas de prérequis d’accès distinct pour Qinghe.",since:"Lancement"},
-{name:"Kaifeng",subtitle:"Région · disponible au lancement",description:"Région principale accessible dès le début ; Roaring Sands est ouverte avec la version 1.1.",since:"Lancement · 1.1"},
+{name:"Kaifeng",subtitle:"Région · disponible au lancement",description:"Région principale accessible dès le début. Les aperçus de version ne donnent pas de prérequis d’accès distinct pour Kaifeng.",since:"Lancement"},
+{name:"Roaring Sands",subtitle:"Kaifeng · Version 1.1",description:"Secteur de Kaifeng entièrement ouvert avec la version 1.1 ; aucun prérequis distinct n’est donné dans l’aperçu de version.",since:"12 décembre 2025"},
 {name:"Jade Gate Pass",subtitle:"Hexi · Version 1.4",description:"Terminer la campagne Qinghe Still Shore, commencer le chapitre By Lamplight, atteindre le niveau 14 et terminer By Lamplight — Rendezvous.",since:"6 mars 2026"},
 {name:"Liangzhou",subtitle:"Hexi · Version 1.5",description:"Accès après la campagne Whitecrown Fortress et le Lost Chapter Ten Through the Pass.",since:"2 avril 2026"},
 {name:"Qinchuan",subtitle:"Hexi · Version 1.6",description:"Accès après la campagne Dasan Pass, puis la quête d’exploration Hues of a Hidden World.",since:"30 avril 2026"},
@@ -121,7 +122,7 @@ const codexRegions=[
 {name:"Qingzhou · Eastern Peak",subtitle:"Version 2.3",description:"Niveau 32, Qinghe Main Chapter — Heaven Has No Pier, puis Lost Chapter Away to Qingzhou.",since:"15 octobre 2026"},
 {name:"Penglai",subtitle:"Qingzhou · Version 2.3",description:"Même accès que Qingzhou : niveau 32, Heaven Has No Pier et Away to Qingzhou. Le secteur de Penglai s’ouvre avec la suite de la mise à jour.",since:"29 octobre 2026"},
 {name:"Hutuo",subtitle:"Hidden Mountain · Version 2.4",description:"Niveau 32, Kaifeng Main Chapter — New Arrival in Kaifeng, puis Lost Chapter Hutuo Memories.",since:"13 novembre 2026"},
-{name:"Transdust Ruins",subtitle:"Carte d’événement",description:"Zone d’événement répertoriée dans les cartes communautaires ; les sources officielles consultées ne donnent pas de progression permanente comparable aux régions principales.",since:"Événement"}
+
 ];
 const codexCampaigns=[
 ["River Master","Kaifeng · Roaring Sands","Version 1.1"],
