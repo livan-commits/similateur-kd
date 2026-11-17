@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "kode.h"
 #include "kode_log.h"
 #include "spotify_ble.h"
