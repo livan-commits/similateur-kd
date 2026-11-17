@@ -9,7 +9,7 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 - Suivi manuel de catégories de découvertes.
 - Journal d'aventure.
 - Planificateur de builds structuré par voie, arts martiaux, Inner Ways et compétences, avec notes d’équipement.
-- Encyclopédie recherchable et filtrable : 11 voies, arts martiaux et Inner Ways nommés, compétences et systèmes de la version 2.4 ; les limites documentaires sont affichées.
+- Encyclopédie recherchable et filtrable : 11 voies, 22 arts martiaux, 34 Inner Ways nommés, 12 régions, 14 campagnes, 31 boss mondiaux, compétences et systèmes de la version 2.4 ; les limites documentaires sont affichées.
 - Catalogue de 31 boss mondiaux jusqu'à la version 2.4, avec le boss de campagne Xiao Han distingué séparément et des liens vers les sources de roster.
 - Conseils de combat sourcés pour plusieurs boss (Sheng Wu, Hidden Mountain, Qingzhou et Hutuo), avec liens directs vers les guides consultés.
 - Les mécaniques propres aux épreuves d'épée en équipe sont explicitement distinguées des combats de boss en monde ouvert.
