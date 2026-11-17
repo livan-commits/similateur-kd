@@ -93,3 +93,13 @@ Sources techniques : [documentation d'intégration TH.GL](https://www.th.gl/deve
 ## 7. État actuel
 
 À la date de cette version, le compagnon possède une carte TH.GL intégrée avec chargement à la demande ; la progression propre au compagnon reste indépendante des cases cochées chez TH.GL. Le compagnon ne possède pas encore de projet Supabase configuré, de compte utilisateur actif, de synchronisation cloud réellement opérationnelle, de liaison NetEase ni de suivi automatique de position. Le code du client cloud et le schéma SQL sont préparés, mais le schéma n'a pas été appliqué ni testé sur une instance Supabase. Les données continuent donc d'être enregistrées dans le navigateur. La fusion actuelle conserve les entrées distinctes et donne priorité à l'état local en cas de doublon ; elle ne constitue pas encore une résolution complète des conflits entre modifications simultanées sur plusieurs appareils. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
+
+
+## 8. Suivi de position en direct : état de faisabilité
+
+La Companion App de TH.GL propose un suivi en direct pour Where Winds Meet, mais sa documentation indique actuellement une prise en charge du jeu sur **Steam uniquement**, avec une application Windows 10/11. Le site web seul fonctionne sur téléphone et navigateur, mais ne fournit pas à lui seul le suivi de position. Peer Link permet à un navigateur ou à un téléphone de voir une position partagée, à condition qu'un joueur utilise au préalable l'application de bureau TH.GL et génère un code de partage.
+
+- Présentation et plateformes prises en charge : https://www.th.gl/fr/apps/where-winds-meet
+- Fonctionnement de Peer Link : https://www.th.gl/faq/see-friends-on-map
+
+**Conséquence pour ce projet :** cette solution peut dépanner un joueur PC/Steam avec un second écran, mais elle ne satisfait pas l'objectif multiplateforme (PlayStation, Xbox, PC et mobile). Nous ne l'intégrons donc pas comme système de suivi natif et universel. Aucun accès mémoire du jeu, injection, contournement anti-triche, identifiant de session ou API privée n'est ajouté au compagnon. Une intégration multiplateforme ne sera annoncée que si une interface officielle ou une méthode autorisée et vérifiable devient disponible.
