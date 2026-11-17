@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#101713"/>
+  <circle cx="256" cy="256" r="174" fill="none" stroke="#c6a66b" stroke-width="14"/>
+  <path d="M170 150h172M170 210h172M170 270h172M170 330h172" stroke="#c6a66b" stroke-width="10" stroke-linecap="round" opacity=".45"/>
+  <text x="256" y="302" text-anchor="middle" font-family="serif" font-size="194" font-weight="700" fill="#f0e5cf">風</text>
+</svg>
