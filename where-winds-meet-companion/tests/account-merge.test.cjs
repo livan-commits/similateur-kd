@@ -60,7 +60,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v8"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v9"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -73,5 +73,10 @@ assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creat
 assert.ok(appSource.includes('b.elements.namedItem("details").value'), "build details must be read from the named textarea");
 assert.equal(appSource.includes("q.name.value"), false, "quest form must not rely on ambiguous named access");
 assert.equal(appSource.includes("b.name.value"), false, "build form must not rely on ambiguous named access");
+assert.ok(appSource.includes("31 boss mondiaux"), "boss catalogue must state the world-boss count separately");
+assert.ok(appSource.includes("Xiao Han"), "Hutuo campaign boss must be documented separately from world bosses");
+assert.ok(appSource.includes("wherewindsmeet.org/guides/hutuo"), "Hutuo roster source must be linked from the boss view");
+assert.ok(appSource.includes("wherewindsmeetgame.org/guides/where-winds-meet-bosses"), "boss roster source must be linked from the boss view");
+
 
 console.log("Account sync merge tests passed.");
