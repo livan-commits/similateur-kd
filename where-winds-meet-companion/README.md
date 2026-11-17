@@ -5,7 +5,7 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 ## Fonctions présentes
 - Tableau de bord de progression.
 - Carnet d'objectifs et cases à cocher.
-- Suivi manuel de catégories de découvertes.
+- Carte TH.GL intégrée au compagnon, avec sélection des cartes Plaine centrale, Hexi et Ruines Transdust ; chargement à la demande et lien de crédit conservé.\n- Suivi manuel de catégories de découvertes.
 - Journal d'aventure.
 - Fiches personnelles de builds.
 - Notes de stratégie pour les boss.
