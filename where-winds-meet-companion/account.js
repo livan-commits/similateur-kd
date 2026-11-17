@@ -19,7 +19,7 @@
     const journal=new Map();
     (remote.journal||[]).concat(local.journal||[]).forEach(function(j){journal.set(String(j.date||"")+"|"+String(j.note||""),j);});
     const builds=new Map();
-    (remote.builds||[]).concat(local.builds||[]).forEach(function(b){builds.set(String(b.name||"")+"|"+String(b.details||""),b);});
+    (remote.builds||[]).concat(local.builds||[]).forEach(function(b){const key=b.id?"id:"+String(b.id):"legacy:"+String(b.name||"")+"|"+String(b.details||"");const prev=builds.get(key);builds.set(key,prev?Object.assign({},prev,newer(b,prev)):b);});
     const checks=Object.assign({},remote.checks||{});
     const checkUpdatedAt=Object.assign({},remote.checkUpdatedAt||{});
     Object.keys(local.checks||{}).forEach(function(k){const lt=Date.parse((local.checkUpdatedAt||{})[k]||"")||0,rt=Date.parse(checkUpdatedAt[k]||"")||0;if(!(k in checks)||lt>=rt){checks[k]=local.checks[k];if((local.checkUpdatedAt||{})[k])checkUpdatedAt[k]=local.checkUpdatedAt[k];}});
