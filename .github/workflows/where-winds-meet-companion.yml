@@ -25,6 +25,9 @@ jobs:
           test -s where-winds-meet-companion/manifest.webmanifest
           test -s where-winds-meet-companion/service-worker.js
           test -s where-winds-meet-companion/CONNEXIONS.md
+          test -s where-winds-meet-companion/supabase/schema.sql
+          grep -q 'enable row level security' where-winds-meet-companion/supabase/schema.sql
+          grep -q 'auth.uid()' where-winds-meet-companion/supabase/schema.sql
           ! grep -qi 'xbox' where-winds-meet-companion/index.html
           ! grep -qi 'xbox' where-winds-meet-companion/app.js
           node --check where-winds-meet-companion/app.js
