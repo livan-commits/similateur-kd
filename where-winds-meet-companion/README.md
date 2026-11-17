@@ -11,11 +11,11 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 - Planificateur de builds structuré par voie, arts martiaux, Inner Ways et compétences, avec cinq modèles de départ sourcés et notes d’équipement.
 - Encyclopédie recherchable et filtrable : 11 voies, 22 arts martiaux, 34 Inner Ways nommés, 12 régions, 14 campagnes, 31 boss mondiaux, compétences et systèmes de la version 2.4 ; les limites documentaires sont affichées.
 - Catalogue de 31 boss mondiaux jusqu'à la version 2.4, avec le boss de campagne Xiao Han distingué séparément et des liens vers les sources de roster.
-- Conseils de combat sourcés pour plusieurs boss (Sheng Wu, Hidden Mountain, Qingzhou et Hutuo), avec liens directs vers les guides consultés.
+- 29 fiches de combat sourcées sur 31 boss mondiaux. Les deux restantes signalent pourquoi les guides retrouvés ne sont pas transposés au combat mondial en direct.
 - Les mécaniques propres aux épreuves d'épée en équipe sont explicitement distinguées des combats de boss en monde ouvert.
 - Export et import JSON de la progression, avec fusion des entrées lors de l'import.
 - Sauvegarde locale dans le navigateur.
-- Structure PWA et service worker pour l'utilisation hors ligne après première visite.
+- PWA installable sur les navigateurs compatibles, bouton d’installation lorsque le navigateur le propose, et service worker pour l’utilisation hors ligne après première visite.
 
 ## Direction du projet : compagnon connecté
 Le but n'est pas de rester une simple encyclopédie. Le projet vise :
@@ -29,7 +29,7 @@ Le but n'est pas de rester une simple encyclopédie. Le projet vise :
 - **Compte compagnon :** interface d'inscription, connexion, déconnexion et réinitialisation du mot de passe ajoutée ; activation réelle en attente de la configuration Supabase.
 - **Synchronisation cloud :** le client et le schéma Supabase imposent une écriture atomique conditionnée par la révision via une fonction SQL dédiée (lecture directe seule pour le client) ; en cas de conflit, le client relit, fusionne et retente au lieu d'écraser silencieusement. Les horodatages arbitrent les quêtes et découvertes, les anciennes entrées favorisent l'appareil en cours de fusion, et les suppressions de notes de carte sont conservées par tombstones. Cette fonction SQL doit être appliquée dans Supabase et n'a pas encore été testée sur un projet réel. Le service reste inactif tant qu'aucun projet Supabase n'est configuré ; les données restent enregistrées localement.
 - **Connexion au compte NetEase / compte de plateforme :** aucune connexion n'est actuellement demandée ou effectuée. Aucun mot de passe, cookie ou jeton ne doit être communiqué au projet.
-- **Position du personnage en direct :** pas encore implémentée dans ce compagnon. Elle devra être évaluée séparément pour chaque plateforme et uniquement avec une méthode autorisée.
+- **Position du personnage en direct :** pas intégrée directement dans ce compagnon. Option communautaire existante : TH.GL Companion App sur Windows/Steam suit le joueur ; Peer Link permet à ce joueur de partager sa position vers un navigateur ou un téléphone. Cela ne suit pas directement les joueurs sur console et ne constitue pas une solution universelle. [Fiche TH.GL Where Winds Meet](https://www.th.gl/fr/apps/where-winds-meet) · [Guide Peer Link](https://www.th.gl/faq/see-friends-on-map).
 - **Progression automatique des quêtes / objets :** pas encore implémentée.
 
 ## Architecture prévue pour les connexions
@@ -51,6 +51,6 @@ La carte TH.GL est affichée dans le compagnon via son mécanisme officiel d'int
 Les marqueurs communautaires seront identifiés comme tels et ne seront pas présentés comme des données officielles.
 
 ## Déploiement
-Le workflow GitHub Actions de ce compagnon vérifie les fichiers requis, la syntaxe JavaScript, les tests de fusion des sauvegardes, la neutralité multiplateforme de l'interface et la présence des protections RLS du schéma SQL, puis prépare un artefact web. **Il ne déploie pas encore cette application sur une URL publique.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
+Le workflow GitHub Actions vérifie les fichiers requis, la syntaxe JavaScript, les tests de fusion, les protections RLS, la configuration Vercel et les tests navigateur Playwright sur ordinateur et mobile, puis prépare un artefact web. Le dossier est configuré pour un hébergement statique Vercel avec `where-winds-meet-companion/` comme répertoire racine. **Le déploiement public reste à effectuer après connexion du compte Vercel.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
 
 Projet indépendant, non affilié à Everstone Studio ou NetEase.
