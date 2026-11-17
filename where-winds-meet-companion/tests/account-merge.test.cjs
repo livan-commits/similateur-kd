@@ -35,4 +35,13 @@ assert.equal(merged.journal.length, 2, "duplicate journal entries must be collap
 assert.equal(merged.builds.length, 2, "remote-only builds must be preserved");
 assert.equal(merged.mapNotes.length, 2, "personal map notes from both devices must be preserved");
 assert.equal(merged.mapRegion, "central", "the current device region must be retained");
-console.log("Account sync merge tests passed.");
+
+const conflictMerged=window.wwmMergeData(
+  {checks:{Coffres:false},checkUpdatedAt:{Coffres:"2026-11-17T12:00:00.000Z"},mapNotes:[],deletedMapNoteIds:["deleted-note"],quests:[{name:"Quest",done:false,updatedAt:"2026-11-17T12:00:00.000Z"}]},
+  {checks:{Coffres:true},checkUpdatedAt:{Coffres:"2026-11-17T11:00:00.000Z"},mapNotes:[{id:"deleted-note",title:"Should stay deleted"},{id:"live-note",title:"Keep me"}],deletedMapNoteIds:[],quests:[{name:"Quest",done:true,updatedAt:"2026-11-17T11:00:00.000Z"}]}
+);
+assert.equal(conflictMerged.checks.Coffres,false,"the newest timestamp must win for discovery checkboxes");
+assert.equal(conflictMerged.quests[0].done,false,"the newest timestamp must win for quest completion");
+assert.deepEqual(Array.from(conflictMerged.mapNotes, n=>n.id),["live-note"],"deleted map notes must not be resurrected");
+assert.deepEqual(Array.from(conflictMerged.deletedMapNoteIds),["deleted-note"],"map note tombstones must survive merging");
+\nconsole.log("Account sync merge tests passed.");
