@@ -112,5 +112,17 @@ assert.ok(appSource.includes("Compétence mystique Contortion"), "Hidden Mountai
 assert.ok(appSource.includes("boss-strategy"), "sourced strategy details must render in expandable boss-card sections");
 assert.ok(appSource.includes("(b.strategy||'')+' '+(b.sourceLabel||'')"), "boss search must index strategy text and source labels");
 
+assert.ok(appSource.includes("Encyclopédie du Jianghu"), "codex placeholder must be replaced by the real encyclopedia");
+assert.ok(appSource.includes("const codexPaths=["), "codex must define a sourced Path catalogue");
+assert.ok(appSource.includes('path:"Silkbind - Wings"'), "codex must include the newest Path from Version 2.3");
+assert.ok(appSource.includes('name:"Sky Tether"'), "codex must include the Version 2.4 gauntlet Omni-Weapon skill");
+assert.ok(appSource.includes('name:"Silken Step"'), "codex must include the Version 2.4 waist-drum Omni-Weapon skill");
+assert.ok(appSource.includes("codex-filter"), "codex must expose category filtering");
+assert.ok(appSource.includes("function codexResults(entries)"), "codex must render searchable source-linked entries");
+assert.ok(appSource.includes("toLocaleLowerCase(\"fr\")"), "codex search must be case-insensitive for French text");
+assert.ok(appSource.includes("11 voies et leurs arts/passifs nommés"), "codex must disclose the scope and limits of its catalogue");
+assert.ok(!appSource.includes("Le catalogue est en cours de constitution"), "codex must not remain an empty placeholder");
+
+
 
 console.log("Account sync merge tests passed.");
