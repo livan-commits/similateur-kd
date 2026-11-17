@@ -45,4 +45,14 @@ assert.equal(conflictMerged.quests[0].done,false,"the newest timestamp must win 
 assert.deepEqual(Array.from(conflictMerged.mapNotes, n=>n.id),["live-note"],"deleted map notes must not be resurrected");
 assert.deepEqual(Array.from(conflictMerged.deletedMapNoteIds),["deleted-note"],"map note tombstones must survive merging");
 
+
+const schema = fs.readFileSync("where-winds-meet-companion/supabase/schema.sql", "utf8");
+assert.match(schema, /create or replace function public\\.save_companion_state/i, "SQL must define the revision-checked save function");
+assert.match(schema, /security invoker/i, "the save function must respect caller RLS policies");
+assert.match(schema, /current_state\\.revision = p_expected_revision/i, "updates must compare the expected revision atomically");
+assert.match(schema, /on conflict \\(user_id\\) do nothing/i, "first writes must not overwrite a row created concurrently");
+assert.match(schema, /grant execute on function public\\.save_companion_state\\(bigint, integer, jsonb\\) to authenticated/i, "only authenticated users receive execute permission");
+assert.match(source, /client\\.rpc\\("save_companion_state"/i, "the browser client must use the atomic SQL function");
+assert.doesNotMatch(source, /\\.upsert\\(/i, "cloud snapshots must not use unconditional upserts");
+
 console.log("Account sync merge tests passed.");
