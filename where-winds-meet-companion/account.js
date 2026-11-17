@@ -1,6 +1,6 @@
 (function(){
   const cfg=window.WWM_SUPABASE_CONFIG||{};
-  let client=null,user=null,cloudReady=false,recoveryMode=false,queue=Promise.resolve();
+  let client=null,user=null,cloudReady=false,recoveryMode=false,syncInFlight=false,queue=Promise.resolve();
   if(window.supabase&&window.supabase.createClient&&cfg.url&&cfg.anonKey&&!cfg.url.includes("YOUR_")&&!cfg.anonKey.includes("YOUR_")){
     client=window.supabase.createClient(cfg.url,cfg.anonKey);
   }
@@ -25,20 +25,33 @@
     return Object.assign({},remote,local,{quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:checks,builds:Array.from(builds.values()),mapNotes:Array.from(mapNotes.values()),mapRegion:local.mapRegion||remote.mapRegion||"central"});
   }
   async function sync(){
-    if(!client||!user)return;
-    message("Synchronisation en cours…");cloudReady=false;
-    const api=window.wwmDataApi;const local=api.getData();
-    const read=await client.from("companion_state").select("payload").eq("user_id",user.id).maybeSingle();
-    if(read.error){message("Erreur de lecture : "+read.error.message);return;}
-    const combined=merge(local,read.data&&read.data.payload||{});
-    api.setData(combined);api.saveLocal();
-    const write=await client.from("companion_state").upsert({user_id:user.id,schema_version:1,payload:combined},{onConflict:"user_id"});
-    if(write.error){message("Erreur d’enregistrement : "+write.error.message);return;}
-    cloudReady=true;
-    const latest=api.getData();
-    if(JSON.stringify(latest)!==JSON.stringify(combined))window.wwmCloudSave(latest);
-    message("Synchronisation terminée. Tes données sont enregistrées sur ton compte.");
-    const state=document.querySelector("#save-state");if(state)state.textContent="● Synchronisation activée";
+    if(!client||!user||syncInFlight)return;
+    syncInFlight=true;cloudReady=false;
+    const syncUserId=user.id;
+    try{
+      message("Synchronisation en cours…");
+      // Finish older autosaves before reading the remote snapshot, otherwise a stale
+      // queued write could race with the initial merge and overwrite newer data.
+      await queue;
+      if(!user||user.id!==syncUserId)throw new Error("La session a changé. Reconnecte-toi puis relance la synchronisation.");
+      const api=window.wwmDataApi;const local=api.getData();
+      const read=await client.from("companion_state").select("payload").eq("user_id",syncUserId).maybeSingle();
+      if(read.error)throw new Error("Erreur de lecture : "+read.error.message);
+      const combined=merge(local,read.data&&read.data.payload||{});
+      api.setData(combined);api.saveLocal();
+      const write=await client.from("companion_state").upsert({user_id:syncUserId,schema_version:1,payload:combined},{onConflict:"user_id"});
+      if(write.error)throw new Error("Erreur d’enregistrement : "+write.error.message);
+      if(!user||user.id!==syncUserId)throw new Error("La session a changé pendant la synchronisation.");
+      cloudReady=true;
+      const latest=api.getData();
+      if(JSON.stringify(latest)!==JSON.stringify(combined))window.wwmCloudSave(latest);
+      await queue;
+      message("Synchronisation terminée. Tes données sont enregistrées sur ton compte.");
+      const state=document.querySelector("#save-state");if(state)state.textContent="● Synchronisation activée";
+    }catch(error){
+      cloudReady=false;message(error.message||"La synchronisation a échoué.");
+      const state=document.querySelector("#save-state");if(state)state.textContent="● Sauvegarde locale — cloud en erreur";
+    }finally{syncInFlight=false;}
   }
   window.wwmMergeData=merge;
   window.wwmAccountView=view;
