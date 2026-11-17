@@ -188,7 +188,6 @@ public final class SpotifyBridgeService extends NotificationListenerService {
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @Override public void onConnectionStateChange(BluetoothGatt bluetoothGatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                bluetoothGatt.requestMtu(185);
                 bluetoothGatt.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 phoneState = null;
@@ -214,9 +213,16 @@ public final class SpotifyBridgeService extends NotificationListenerService {
                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         bluetoothGatt.writeDescriptor(descriptor);
                     }
+                } else {
+                    bluetoothGatt.requestMtu(185);
                 }
             }
-            sendPhoneState();
+        }
+
+        @Override public void onDescriptorWrite(BluetoothGatt bluetoothGatt, BluetoothGattDescriptor descriptor, int status) {
+            if (CCCD_UUID.equals(descriptor.getUuid())) {
+                bluetoothGatt.requestMtu(185);
+            }
         }
 
         @Override public void onCharacteristicChanged(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic characteristic, byte[] value) {
