@@ -4,7 +4,7 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 
 ## Fonctions présentes
 - Tableau de bord de progression.
-- Carnet d’objectifs et cases à cocher, avec parcours de déblocage régionaux sourcés (Hexi, Liangzhou, Qinchuan, Palais impérial, Hidden Mountain, Qingzhou et Hutuo).
+- Carnet d’objectifs et cases à cocher, avec parcours de déblocage régionaux sourcés (Hexi, Liangzhou, Qinchuan, Palais impérial, Hidden Mountain, Qingzhou et Hutuo), et liens vers les trackers quotidiens/hebdomadaires et le calendrier TH.GL.
 - Carte TH.GL intégrée au compagnon, avec sélection des cartes Plaine centrale, Hexi et Ruines Transdust ; chargement à la demande et lien de crédit conservé.
 - Suivi manuel de catégories de découvertes.
 - Journal d'aventure.
