@@ -60,7 +60,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v9"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v10"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -113,6 +113,13 @@ assert.ok(appSource.includes("boss-strategy"), "sourced strategy details must re
 assert.ok(appSource.includes("(b.strategy||'')+' '+(b.sourceLabel||'')"), "boss search must index strategy text and source labels");
 
 assert.ok(appSource.includes("Encyclopédie du Jianghu"), "codex placeholder must be replaced by the real encyclopedia");
+assert.ok(appSource.includes("PLANIFICATEUR PERSONNEL"), "build view must expose the structured planner");
+assert.ok(appSource.includes("id="+"\\\"build-path"), "build planner must let players select a Path");
+assert.ok(appSource.includes("id="+"\\\"build-inner"), "build planner must support selecting Inner Ways");
+assert.ok(appSource.includes("innerWays:selectedInner"), "build saves must preserve selected Inner Ways");
+assert.ok(appSource.includes("arts:arts"), "build saves must preserve selected Martial Arts");
+assert.ok(appSource.includes("id="+"\\\"build-art1"), "build planner must expose the first Martial Art selector");
+
 assert.ok(appSource.includes("const codexPaths=["), "codex must define a sourced Path catalogue");
 assert.ok(appSource.includes('path:"Silkbind - Wings"'), "codex must include the newest Path from Version 2.3");
 assert.ok(appSource.includes('name:"Sky Tether"'), "codex must include the Version 2.4 gauntlet Omni-Weapon skill");
