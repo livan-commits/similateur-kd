@@ -24,14 +24,14 @@ Une liaison au compte Where Winds Meet n'a d'intérêt que si NetEase fournit un
 | Environnement | Cible | État |
 |---|---|---|
 | Web / PWA sur toutes les plateformes | Carte intégrée, carnet, compte compagnon et synchronisation | Carte TH.GL intégrée à la demande ; compte et cloud à configurer |
-| Windows / PC | Étudier un connecteur local de position en direct | Faisabilité démontrée par des outils communautaires, mais aucun connecteur propre n'est développé |
+| Windows / PC Steam | Position en direct via TH.GL Companion App ; partage Peer Link vers navigateur/téléphone | Solution communautaire existante, indépendante de ce compagnon ; aucune API ni intégration TH.GL n'est développée ici |
 | PlayStation | Carte et suivi manuel ; étudier uniquement les interfaces autorisées | Pas d'API publique de position du personnage identifiée |
 | Xbox | Carte et suivi manuel ; étudier uniquement les interfaces autorisées | Pas d'API publique de position du personnage identifiée |
-| Android / iOS | Utiliser le compagnon comme deuxième écran | Le compagnon n'a pas accès automatiquement à l'état interne d'une autre application |
+| Android / iOS | Carte web ; affichage d'une position partagée par Peer Link depuis un PC Windows/Steam | Le site TH.GL seul ne suit pas la position ; un joueur Windows doit lancer TH.GL et partager son Peer Code |
 
 ### Référence communautaire existante
 
-TH.GL indique que son application compagnon Windows (Windows 10/11) affiche la position et l'orientation du joueur sur la carte. Sa fiche précise que la détection de Where Winds Meet est actuellement prise en charge via **Steam**. Le site web de TH.GL fonctionne sur tous les appareils, mais ne fournit pas à lui seul la superposition ni le suivi de position. TH.GL décrit également un partage de position entre utilisateurs par Peer Link. Ces informations démontrent une solution communautaire dans une configuration précise, **pas** une API universelle, une autorisation officielle de NetEase, ni un droit de réutiliser son code ou son protocole.
+TH.GL indique que son application compagnon Windows (Windows 10/11) prend en charge Where Winds Meet sur **Steam** et affiche la position du joueur ainsi que les ressources réellement apparues. Le site web de TH.GL fonctionne sur tous les appareils, mais ne fournit pas à lui seul le suivi de position. Peer Link permet à un joueur qui exécute l'application de partager sa propre position avec un navigateur, un téléphone ou une tablette ; il ne lit pas la position des joueurs console et ne constitue pas un connecteur universel. Ces informations démontrent une solution communautaire dans une configuration précise, **pas** une API universelle, une autorisation officielle de NetEase, ni un droit de réutiliser son code ou son protocole.
 
 - [Carte Where Winds Meet sur TH.GL](https://wherewindsmeet.th.gl/)
 - [Fiche TH.GL : Companion App Windows et compatibilité Steam](https://www.th.gl/fr/apps/where-winds-meet)
