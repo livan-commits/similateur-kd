@@ -36,6 +36,7 @@ jobs:
           node --check where-winds-meet-companion/account.js
           node --check where-winds-meet-companion/supabase-config.js
           node --check where-winds-meet-companion/service-worker.js
+          node where-winds-meet-companion/tests/account-merge.test.cjs
       - name: Package companion website
         uses: actions/upload-artifact@v4
         with:
