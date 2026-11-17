@@ -32,6 +32,8 @@ jobs:
           grep -q 'auth.uid()' where-winds-meet-companion/supabase/schema.sql
           ! grep -qi 'xbox' where-winds-meet-companion/index.html
           ! grep -qi 'xbox' where-winds-meet-companion/app.js
+          grep -q 'embed/maps/' where-winds-meet-companion/app.js
+          grep -q 'The Hidden Gaming Lair' where-winds-meet-companion/app.js
           node --check where-winds-meet-companion/app.js
           node --check where-winds-meet-companion/account.js
           node --check where-winds-meet-companion/supabase-config.js
