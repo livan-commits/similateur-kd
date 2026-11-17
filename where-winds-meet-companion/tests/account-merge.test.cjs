@@ -85,6 +85,9 @@ assert.ok(appSource.includes("gamemarket.gg/news/where-winds-meet/where-winds-me
 assert.ok(appSource.includes("Ces consignes concernent cette épreuve d’équipe, pas nécessairement le boss en monde ouvert"), "trial-only mechanics must not be presented as open-world mechanics");
 assert.ok(appSource.includes("dont les mécaniques diffèrent du boss mondial"), "Centipede trial mechanics must be clearly scoped");
 assert.ok(appSource.includes("lettre de développeurs du 19 septembre"), "Taicu and Goshawk tactics must retain their developer-letter provenance");
+assert.ok(appSource.includes("lettre de développeurs du 21 août"), "Inkpincer Scorpion and Cloudclutch Serpent tactics must retain their developer-letter provenance");
+assert.ok(appSource.includes("Compétence mystique Contortion"), "Hidden Mountain boss preparation must mention Contortion where required");
+assert.ok(appSource.includes("boss-strategy"), "sourced strategy details must render in expandable boss-card sections");
 
 
 console.log("Account sync merge tests passed.");
