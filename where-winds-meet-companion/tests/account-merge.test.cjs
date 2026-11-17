@@ -39,9 +39,7 @@ const structuredBuilds=window.wwmMergeData(
 );
 assert.equal(structuredBuilds.builds.length, 2, "builds with different IDs must not collapse when their names match");
 assert.equal(structuredBuilds.builds.find(b=>b.id==="build-shared").path,"Bamboocut - Wind","the newest version of the same structured build must win");
-assert.ok(appSource.includes("id:(crypto.randomUUID?crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
 assert.ok(source.includes('const key=b.id?"id:"+String(b.id)'), "cloud merge must key structured builds by ID");
-assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
 
 assert.equal(merged.mapNotes.length, 2, "personal map notes from both devices must be preserved");
 assert.equal(merged.mapRegion, "central", "the current device region must be retained");
@@ -82,6 +80,8 @@ assert.ok(vercel.headers.some(rule => rule.source === "/(.*)" && rule.headers.so
 
 
 const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
+assert.ok(appSource.includes("id:(crypto.randomUUID?crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
+assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
 assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
 assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creation must avoid form property name collisions");
 assert.ok(appSource.includes('b.elements.namedItem("details").value'), "build details must be read from the named textarea");
