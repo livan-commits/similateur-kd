@@ -31,7 +31,10 @@ bool spotify_ble_get_phone_state(char *out, size_t out_size)
         return false;
     }
     portENTER_CRITICAL(&s_state_mux);
-    (void)snprintf(out, out_size, "%s", s_phone_state);
+    size_t length = strlen(s_phone_state);
+    if (length >= out_size) length = out_size - 1U;
+    memcpy(out, s_phone_state, length);
+    out[length] = '\0';
     portEXIT_CRITICAL(&s_state_mux);
     return true;
 }
@@ -44,7 +47,8 @@ void spotify_ble_on_phone_state(const kode_event_t *event)
     if ((event != NULL) &&
         (event->source != NULL) &&
         (strcmp(event->source, SPOTIFY_CHR_PHONE_STATE) == 0) &&
-        (event->value > 0)) {
+        (event->value > 0) &&
+        (event->text != NULL)) {
         size_t length = (size_t)event->value;
         if (length >= sizeof(s_phone_state)) {
             length = sizeof(s_phone_state) - 1U;
