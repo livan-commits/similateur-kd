@@ -60,7 +60,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v10"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v11"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -75,6 +75,12 @@ assert.equal(appSource.includes("q.name.value"), false, "quest form must not rel
 assert.equal(appSource.includes("b.name.value"), false, "build form must not rely on ambiguous named access");
 const bossBlock = appSource.split("const bossData=[")[1].split("];")[0];
 assert.equal((bossBlock.match(/\{name:/g)||[]).length, 31, "boss catalogue must contain exactly 31 world-boss records");
+assert.equal((bossBlock.match(/strategy:/g)||[]).length, 29, "29 world-boss strategies must have sourced guidance");
+assert.ok(appSource.includes("les sources détaillées retrouvées ne correspondent pas à leur version mondiale en direct"), "boss catalogue must disclose why two strategies are intentionally absent");
+assert.ok(appSource.includes("serveur de test"), "Gilded Lament must not reuse test-server tactics as live guidance");
+assert.ok(appSource.includes("Hero’s Realm à 10 joueurs"), "Snowplum Requiem raid mechanics must not be presented as open-world tactics");
+assert.ok(appSource.includes("guideStatus||"), "boss cards must explain missing strategy evidence");
+
 assert.ok(appSource.includes("31 boss mondiaux"), "boss catalogue must state the world-boss count separately");
 assert.ok(appSource.includes("Xiao Han"), "Hutuo campaign boss must be documented separately from world bosses");
 assert.ok(appSource.includes("wherewindsmeet.org/guides/hutuo"), "Hutuo roster source must be linked from the boss view");
