@@ -6,7 +6,7 @@ const { chromium } = require("playwright");
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto("http://127.0.0.1:4173/index.html", { waitUntil: "networkidle" });
+  await page.goto("http://127.0.0.1:4173/index.html", { waitUntil: "domcontentloaded" });
 
   await page.locator("#nav [data-view]").first().waitFor();
   await page.locator('#nav [data-view="codex"]').click();
@@ -22,7 +22,7 @@ const { chromium } = require("playwright");
   await page.locator('#nav [data-view="builds"]').click();
   await page.locator("#build-template").selectOption("0");
   assert.equal(await page.locator("#build-path").inputValue(), "Bellstrike - Umbra", "starter template should populate its Path");
-  await page.locator("#build-form button[type=submit]").click();
+  await page.locator("#build-form button").click();
   assert.ok(await page.getByText("DPS saignement · Strategic Sword + Heavenquaker Spear").count() >= 1, "build should save and render");
 
   await page.locator('#nav [data-view="map"]').click();
@@ -30,7 +30,7 @@ const { chromium } = require("playwright");
   assert.ok(await page.locator('a[href="https://www.th.gl/fr/apps/where-winds-meet"]').count() === 1, "map should link to TH.GL WWM companion");
 
   await page.locator('#nav [data-view="account"]').click();
-  assert.ok((await page.locator("#main").innerText()).includes("Connexion cloud à configurer"), "unconfigured cloud account should be explained clearly");
+  assert.ok((await page.locator("#view").innerText()).includes("Connexion cloud à configurer"), "unconfigured cloud account should be explained clearly");
 
   assert.deepEqual(errors, [], "the application should not throw browser runtime errors");
   await browser.close();
