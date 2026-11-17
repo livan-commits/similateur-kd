@@ -13,7 +13,7 @@ Un compte propre à ce projet permettra de retrouver les mêmes données sur le 
 - journal personnel ;
 - préférences de carte et filtres.
 
-Ce compte ne sera **pas** le compte NetEase, Steam, PlayStation Network, Xbox ou Apple. Il ne demandera jamais le mot de passe du jeu. **Supabase est retenu comme backend cible** pour Supabase Auth et PostgreSQL. Le schéma SQL initial avec Row Level Security est préparé dans `supabase/schema.sql`. Le projet Supabase n'est pas encore créé/configuré ; l'inscription, la connexion, la récupération de compte et la synchronisation ne sont donc pas actives.
+Ce compte ne sera **pas** le compte NetEase, Steam, PlayStation Network, Xbox ou Apple. Il ne demandera jamais le mot de passe du jeu. **Supabase est retenu comme backend cible** pour Supabase Auth et PostgreSQL. Le schéma SQL initial avec Row Level Security est préparé dans `supabase/schema.sql`. Le client Supabase, l'interface d'inscription/connexion/déconnexion/récupération du mot de passe et la première synchronisation sont codés. Le projet Supabase n'est pas encore créé/configuré : ces fonctions restent donc inactives tant que l'URL et la clé publishable ne sont pas renseignées et que le schéma SQL n'est pas appliqué.
 
 ### Connexion au compte du jeu — facultative et non disponible à ce stade
 
@@ -31,10 +31,10 @@ Une liaison au compte Where Winds Meet n'a d'intérêt que si NetEase fournit un
 
 ### Référence communautaire existante
 
-TH.GL indique que son application compagnon Windows peut afficher la position et l'orientation du joueur sur la carte Where Winds Meet. Son site précise aussi que les outils web fonctionnent sur tous les appareils, mais ne fournissent pas la superposition ni le suivi de position. Cela prouve qu'un suivi existe dans une configuration Windows particulière, **pas** qu'une API universelle existe, ni que son implémentation peut être copiée ou réutilisée.
+TH.GL indique que son application compagnon Windows (Windows 10/11) affiche la position et l'orientation du joueur sur la carte. Sa fiche précise que la détection de Where Winds Meet est actuellement prise en charge via **Steam**. Le site web de TH.GL fonctionne sur tous les appareils, mais ne fournit pas à lui seul la superposition ni le suivi de position. TH.GL décrit également un partage de position entre utilisateurs par Peer Link. Ces informations démontrent une solution communautaire dans une configuration précise, **pas** une API universelle, une autorisation officielle de NetEase, ni un droit de réutiliser son code ou son protocole.
 
 - [Carte Where Winds Meet sur TH.GL](https://wherewindsmeet.th.gl/)
-- [FAQ TH.GL : suivi de la position des amis](https://www.th.gl/id/faq/see-friends-on-map)
+- [Fiche TH.GL : Companion App Windows et compatibilité Steam](https://www.th.gl/fr/apps/where-winds-meet)\n- [FAQ TH.GL : suivi de la position des amis via Peer Link](https://www.th.gl/faq/see-friends-on-map)
 - [TH.GL : état du suivi en direct de Where Winds Meet](https://www.th.gl/suggestions-issues/1558792781974081546)
 
 ## 3. Architecture cible
@@ -85,4 +85,4 @@ En conséquence, ce projet n'utilisera pas de lecture mémoire, injection, modif
 
 ## 6. État actuel
 
-À la date de cette version, le compagnon ne possède pas encore de projet Supabase configuré, de compte utilisateur actif, de synchronisation cloud, de liaison NetEase ni de suivi automatique de position. Le schéma SQL est préparé, mais n'a pas encore été appliqué ni testé sur une instance Supabase. Le code existant conserve les données dans le stockage local du navigateur. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
+À la date de cette version, le compagnon ne possède pas encore de projet Supabase configuré, de compte utilisateur actif, de synchronisation cloud réellement opérationnelle, de liaison NetEase ni de suivi automatique de position. Le code du client cloud et le schéma SQL sont préparés, mais le schéma n'a pas été appliqué ni testé sur une instance Supabase. Les données continuent donc d'être enregistrées dans le navigateur. La fusion actuelle conserve les entrées distinctes et donne priorité à l'état local en cas de doublon ; elle ne constitue pas encore une résolution complète des conflits entre modifications simultanées sur plusieurs appareils. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
