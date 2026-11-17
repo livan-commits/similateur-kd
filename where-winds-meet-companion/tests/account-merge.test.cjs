@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v18"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v19"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -86,6 +86,10 @@ assert.ok(appSource.includes('beforeinstallprompt'), "PWA install button must us
 assert.ok(appSource.includes('promptEvent.userChoice'), "PWA install UI must only report an accepted install after user choice");
 assert.ok(appSource.includes("Le suivi automatique de la position du personnage n'est pas implémenté"), "map must clearly disclose that live player tracking is not implemented");
 assert.ok(appSource.includes("ne se connecte pas à ton compte NetEase"), "map must disclose that it does not connect to the game account");
+assert.ok(appSource.includes("www.th.gl/fr/apps/where-winds-meet"), "map must link the official TH.GL Windows/Steam companion app");
+assert.ok(appSource.includes("www.th.gl/faq/see-friends-on-map"), "map must link the Peer Link sharing guide");
+assert.ok(appSource.includes("cela ne fournit pas de suivi direct depuis une console"), "map must disclose that Peer Link is not a universal console tracker");
+
 
 assert.ok(appSource.includes("id:(window.crypto&&window.crypto.randomUUID?window.crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
 assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
