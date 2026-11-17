@@ -12,14 +12,14 @@
 
 /** Where the lines sit, in pixels from the middle of the glass. Well inside
  *  the corners, and far enough apart not to touch at these sizes. */
-#define SR_TIME_DY          (-170)
-#define SR_DATE_DY          (-135)
-#define SR_TITLE_DY         (-105)
-#define SR_COUNT_DY         (-35)
-#define SR_TOUCH_DY         35
-#define SR_BRIGHT_DY        75
-#define SR_HINT_DY          125
-#define SR_HINT2_DY         150
+#define SR_TIME_DY          (-215)
+#define SR_DATE_DY          (-190)
+#define SR_TITLE_DY         (-165)
+#define SR_COUNT_DY         (65)
+#define SR_TOUCH_DY         105
+#define SR_BRIGHT_DY        140
+#define SR_HINT_DY          180
+#define SR_HINT2_DY         205
 
 /** How often the time on the glass is read again, ms. */
 #define SR_CLOCK_MS         1000U
@@ -40,7 +40,8 @@ typedef struct {
     QActive    super;
     kscreen_t  screen;    /**< LVGL on the glass, driven from this AO.   */
     QTimeEvt   clock;     /**< Reads the local time once a second.        */
-    lv_obj_t * count;     /**< The counter's label; LVGL owns the object. */
+    lv_obj_t * count;     /**< The transport status label. */
+    lv_obj_t * art;       /**< Album artwork, backed by the BLE RGB565 buffer. */
     lv_obj_t * time;      /**< The local time.                            */
     lv_obj_t * date;      /**< The local date, or why there is none.      */
     lv_obj_t * touch;     /**< The finger's point.                        */
@@ -62,6 +63,7 @@ static QEvtPtr     l_queue[KQP_AO_QUEUE_LEN];
 static StackType_t l_stack[KQP_AO_STACK_BYTES / sizeof(StackType_t)];
 
 static SpotifyUi l_ao;
+static lv_image_dsc_t s_art_dsc;
 QActive * const AO_SpotifyUi = &l_ao.super;
 
 static QState SpotifyUi_initial(SpotifyUi * const me, void const * const par);
@@ -112,6 +114,19 @@ static void count_bump(SpotifyUi * const me)
  */
 static void clock_show(SpotifyUi const * const me)
 {
+    const uint8_t *art_pixels = NULL;
+    if (spotify_ble_take_artwork(&art_pixels)) {
+        memset(&s_art_dsc, 0, sizeof(s_art_dsc));
+        s_art_dsc.header.magic = LV_IMAGE_HEADER_MAGIC;
+        s_art_dsc.header.cf = LV_COLOR_FORMAT_RGB565;
+        s_art_dsc.header.w = SPOTIFY_ART_WIDTH;
+        s_art_dsc.header.h = SPOTIFY_ART_HEIGHT;
+        s_art_dsc.header.stride = SPOTIFY_ART_WIDTH * 2U;
+        s_art_dsc.data_size = SPOTIFY_ART_BYTES;
+        s_art_dsc.data = art_pixels;
+        lv_image_set_src(me->art, &s_art_dsc);
+        KLOG_I(TAG, "album artwork displayed");
+    }
     char media_state[180];
     if (spotify_ble_get_phone_state(media_state, sizeof(media_state))) {
         lv_label_set_text(me->touch, media_state);
@@ -194,6 +209,8 @@ static void ui_build(SpotifyUi * const me)
                         lv_palette_main(LV_PALETTE_GREY), SR_DATE_DY);
     (void)line_new("SPOTIFY REMOTE", &lv_font_montserrat_28,
                    lv_color_white(), SR_TITLE_DY);
+    me->art = lv_image_create(scr);
+    lv_obj_align(me->art, LV_ALIGN_CENTER, 0, -35);
     me->count = line_new("READY", &lv_font_montserrat_48,
                          lv_palette_main(LV_PALETTE_LIGHT_BLUE), SR_COUNT_DY);
     me->touch = line_new("Waiting for Android companion", &lv_font_montserrat_14,
@@ -219,6 +236,7 @@ void SpotifyUi_ctor(void)
     kscreen_ctor(&me->screen, &me->super, (enum_t)SR_TICK_SIG);
     QTimeEvt_ctorX(&me->clock, &me->super, (enum_t)SR_CLOCK_SIG, 0U);
     me->count      = NULL;
+    me->art        = NULL;
     me->time       = NULL;
     me->date       = NULL;
     me->touch      = NULL;
