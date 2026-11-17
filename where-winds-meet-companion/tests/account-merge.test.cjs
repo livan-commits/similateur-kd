@@ -128,11 +128,11 @@ assert.ok(appSource.includes("(b.strategy||'')+' '+(b.sourceLabel||'')"), "boss 
 
 assert.ok(appSource.includes("Encyclopédie du Jianghu"), "codex placeholder must be replaced by the real encyclopedia");
 assert.ok(appSource.includes("PLANIFICATEUR PERSONNEL"), "build view must expose the structured planner");
-assert.ok(appSource.includes("id="+"\\\"build-path"), "build planner must let players select a Path");
-assert.ok(appSource.includes("id="+"\\\"build-inner"), "build planner must support selecting Inner Ways");
+assert.ok(appSource.includes('id="build-path"'), "build planner must let players select a Path");
+assert.ok(appSource.includes('id="build-inner"'), "build planner must support selecting Inner Ways");
 assert.ok(appSource.includes("innerWays:selectedInner"), "build saves must preserve selected Inner Ways");
 assert.ok(appSource.includes("arts:arts"), "build saves must preserve selected Martial Arts");
-assert.ok(appSource.includes("id="+"\\\"build-art1"), "build planner must expose the first Martial Art selector");
+assert.ok(appSource.includes('id="build-art1"'), "build planner must expose the first Martial Art selector");
 
 assert.ok(appSource.includes("const codexPaths=["), "codex must define a sourced Path catalogue");
 assert.ok(appSource.includes('path:"Silkbind - Wings"'), "codex must include the newest Path from Version 2.3");
