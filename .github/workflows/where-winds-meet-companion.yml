@@ -42,6 +42,7 @@ jobs:
           node --check where-winds-meet-companion/account.js
           node --check where-winds-meet-companion/supabase-config.js
           node --check where-winds-meet-companion/service-worker.js
+          node --check where-winds-meet-companion/tests/browser-smoke.cjs
           node where-winds-meet-companion/tests/account-merge.test.cjs
       - name: Browser smoke tests
         run: |
