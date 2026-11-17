@@ -33,6 +33,16 @@ assert.equal(merged.checks.Coffres, false, "local unchecked discovery must overr
 assert.equal(merged.checks.Secrets, true, "remote-only discoveries must be preserved");
 assert.equal(merged.journal.length, 2, "duplicate journal entries must be collapsed");
 assert.equal(merged.builds.length, 2, "remote-only builds must be preserved");
+const structuredBuilds=window.wwmMergeData(
+  {builds:[{id:"build-shared",name:"Boss setup",path:"Bellstrike - Splendor",arts:["Nameless Sword","Nameless Spear"],innerWays:["Sword Morph"],updatedAt:"2026-11-17T12:00:00.000Z"}]},
+  {builds:[{id:"build-shared",name:"Boss setup",path:"Bamboocut - Wind",arts:["Infernal Twinblades","Mortal Rope Dart"],innerWays:["Vendetta"],updatedAt:"2026-11-17T13:00:00.000Z"},{id:"build-other",name:"Support",path:"Silkbind - Deluge",updatedAt:"2026-11-17T12:30:00.000Z"}]}
+);
+assert.equal(structuredBuilds.builds.length, 2, "builds with different IDs must not collapse when their names match");
+assert.equal(structuredBuilds.builds.find(b=>b.id==="build-shared").path,"Bamboocut - Wind","the newest version of the same structured build must win");
+assert.ok(appSource.includes("id:(crypto.randomUUID?crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
+assert.ok(source.includes('const key=b.id?"id:"+String(b.id)'), "cloud merge must key structured builds by ID");
+assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
+
 assert.equal(merged.mapNotes.length, 2, "personal map notes from both devices must be preserved");
 assert.equal(merged.mapRegion, "central", "the current device region must be retained");
 
@@ -60,7 +70,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v12"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v13"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
