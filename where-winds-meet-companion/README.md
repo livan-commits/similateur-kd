@@ -22,8 +22,8 @@ Le but n'est pas de rester une simple encyclopédie. Le projet vise :
 - des intégrations facultatives et séparées par plateforme, sans rendre les fonctions communes dépendantes d'un seul système.
 
 ## État réel des connexions
-- **Compte compagnon :** interface d'inscription, connexion et déconnexion ajoutée ; activation réelle en attente de la configuration Supabase.
-- **Synchronisation cloud :** pas encore implémentée ; le schéma Supabase est préparé, mais aucun projet backend n'est encore configuré. Les données sont actuellement stockées dans le navigateur.
+- **Compte compagnon :** interface d'inscription, connexion, déconnexion et réinitialisation du mot de passe ajoutée ; activation réelle en attente de la configuration Supabase.
+- **Synchronisation cloud :** le client de synchronisation et le schéma Supabase sont préparés, avec fusion des entrées non conflictuelles et priorité à l'état de l'appareil en cours de synchronisation lorsqu'une même quête ou découverte diffère. Le service reste inactif tant qu'aucun projet Supabase n'est configuré. Les données restent enregistrées localement.
 - **Connexion au compte NetEase / compte de plateforme :** aucune connexion n'est actuellement demandée ou effectuée. Aucun mot de passe, cookie ou jeton ne doit être communiqué au projet.
 - **Position du personnage en direct :** pas encore implémentée dans ce compagnon. Elle devra être évaluée séparément pour chaque plateforme et uniquement avec une méthode autorisée.
 - **Progression automatique des quêtes / objets :** pas encore implémentée.
@@ -43,6 +43,6 @@ Les conditions de NetEase interdisent notamment certains logiciels non autorisé
 Les marqueurs communautaires seront identifiés comme tels et ne seront pas présentés comme des données officielles.
 
 ## Déploiement
-Le workflow GitHub Actions de ce compagnon vérifie les fichiers requis, la syntaxe JavaScript, la neutralité multiplateforme de l'interface et la présence des protections RLS du schéma SQL, puis prépare un artefact web. **Il ne déploie pas encore cette application sur une URL publique.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
+Le workflow GitHub Actions de ce compagnon vérifie les fichiers requis, la syntaxe JavaScript, les tests de fusion des sauvegardes, la neutralité multiplateforme de l'interface et la présence des protections RLS du schéma SQL, puis prépare un artefact web. **Il ne déploie pas encore cette application sur une URL publique.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
 
 Projet indépendant, non affilié à Everstone Studio ou NetEase.
