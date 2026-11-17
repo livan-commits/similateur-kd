@@ -13,7 +13,7 @@
     return '<div class="card"><span class="tag">COMPTE CONNECTÉ</span><h2 style="margin:14px 0">'+esc(user.email||"Joueur connecté")+'</h2><p class="muted small">Ton compte compagnon est connecté. Synchronise tes données pour les retrouver sur tes autres appareils.</p><div class="action-row"><button class="btn primary" id="sync-now">Synchroniser maintenant</button><button class="btn" id="sign-out">Se déconnecter</button></div><p class="small muted" id="auth-message" aria-live="polite">'+(cloudReady?"Synchronisation active.":"Connecté — première synchronisation à effectuer.")+'</p></div>';
   }
   function merge(local,remote){
-    const newer=function(a,b){const ta=Date.parse(a&&a.updatedAt||"")||0,tb=Date.parse(b&&b.updatedAt||"")||0;return ta>tb?a:b;};
+    const newer=function(a,b){const ta=Date.parse(a&&a.updatedAt||"")||0,tb=Date.parse(b&&b.updatedAt||"")||0;return ta>=tb?a:b;};
     const quests=new Map();
     (remote.quests||[]).concat(local.quests||[]).forEach(function(q){const k=String(q.name||"").trim().toLowerCase();if(!k)return;const prev=quests.get(k);quests.set(k,prev?Object.assign({},prev,newer(q,prev)):q);});
     const journal=new Map();
