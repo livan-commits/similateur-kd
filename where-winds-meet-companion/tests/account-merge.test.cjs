@@ -75,8 +75,6 @@ assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type ===
 assert.ok(serviceWorker.includes('"./icon.svg"'), "offline cache must include the PWA icon");
 assert.ok(fs.existsSync("where-winds-meet-companion/icon.svg"), "PWA icon asset must exist");
 assert.ok(fs.readFileSync("where-winds-meet-companion/index.html", "utf8").includes('id="install-btn"'), "PWA install button must be present");
-assert.ok(appSource.includes('beforeinstallprompt'), "PWA install button must use the browser install event");
-assert.ok(appSource.includes('promptEvent.userChoice'), "PWA install UI must only report an accepted install after user choice");
 
 const vercel = JSON.parse(fs.readFileSync("where-winds-meet-companion/vercel.json", "utf8"));
 assert.ok(vercel.headers.some(rule => rule.source === "/service-worker.js"), "Vercel must prevent stale service-worker caching");
@@ -84,6 +82,8 @@ assert.ok(vercel.headers.some(rule => rule.source === "/(.*)" && rule.headers.so
 
 
 const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
+assert.ok(appSource.includes('beforeinstallprompt'), "PWA install button must use the browser install event");
+assert.ok(appSource.includes('promptEvent.userChoice'), "PWA install UI must only report an accepted install after user choice");
 assert.ok(appSource.includes("Le suivi automatique de la position du personnage n'est pas implémenté"), "map must clearly disclose that live player tracking is not implemented");
 assert.ok(appSource.includes("ne se connecte pas à ton compte NetEase"), "map must disclose that it does not connect to the game account");
 
