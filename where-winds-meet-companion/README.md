@@ -8,7 +8,8 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 - Carte TH.GL intégrée au compagnon, avec sélection des cartes Plaine centrale, Hexi et Ruines Transdust ; chargement à la demande et lien de crédit conservé.
 - Suivi manuel de catégories de découvertes.
 - Journal d'aventure.
-- Fiches personnelles de builds.
+- Planificateur de builds structuré par voie, arts martiaux, Inner Ways et compétences, avec notes d’équipement.
+- Encyclopédie recherchable et filtrable : 11 voies, arts martiaux et Inner Ways nommés, compétences et systèmes de la version 2.4 ; les limites documentaires sont affichées.
 - Catalogue de 31 boss mondiaux jusqu'à la version 2.4, avec le boss de campagne Xiao Han distingué séparément et des liens vers les sources de roster.
 - Conseils de combat sourcés pour plusieurs boss (Sheng Wu, Hidden Mountain, Qingzhou et Hutuo), avec liens directs vers les guides consultés.
 - Les mécaniques propres aux épreuves d'épée en équipe sont explicitement distinguées des combats de boss en monde ouvert.
