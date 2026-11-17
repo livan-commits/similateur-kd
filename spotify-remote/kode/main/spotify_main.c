@@ -18,7 +18,8 @@ KODE_APP_MANIFEST("Spotify Remote", "media");
 
 static const kode_ble_characteristic_t s_spotify_chars[] = {
     { "command", COMMAND_UUID, KODE_BLE_READ | KODE_BLE_NOTIFY },
-    { "phone_state", PHONE_STATE_UUID, KODE_BLE_WRITE }
+    { "phone_state", PHONE_STATE_UUID, KODE_BLE_WRITE },
+    { "artwork", "8f3c0004-5b7e-4a52-9d2e-6b1f0c7a4e21", KODE_BLE_WRITE }
 };
 KODE_BLE_SERVICE(SERVICE_UUID, s_spotify_chars);
 
@@ -27,6 +28,7 @@ extern void spotify_ble_on_phone_state(const kode_event_t *event);
 static void on_ble_written(const kode_event_t *event)
 {
     spotify_ble_on_phone_state(event);
+    spotify_ble_on_artwork(event);
 }
 
 static void on_ble_link(const kode_event_t *event)
