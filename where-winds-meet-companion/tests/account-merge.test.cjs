@@ -95,7 +95,7 @@ assert.ok(appSource.includes("rencontre nocturne"), "Wolf Maiden strategy must d
 assert.ok(appSource.includes("attaques de zone peuvent se chevaucher"), "Twin Lions strategy must address overlapping area attacks");
 assert.ok(appSource.includes("Ephemeral Blight"), "Ghost Master strategy must document the prerequisite quest chain");
 assert.ok(appSource.includes("Meridian Touch peut dissiper ses projectiles"), "Ghost Master strategy must document the projectile counter");
-assert.ok(appSource.includes("brise la garde ou l’endurance"), "Nameless General strategy must address phase-one guard break");
+assert.ok(appSource.includes("brisent la garde ou l’endurance"), "Nameless General strategy must address phase-one guard break");
 assert.ok(appSource.includes("trébuchement ou sa courte pause"), "Drunk Martial Artist strategy must explain its punish window");
 assert.ok(appSource.includes("Coffin Keeper Lord"), "Coffin Master strategy must flag the source's historical name");
 
