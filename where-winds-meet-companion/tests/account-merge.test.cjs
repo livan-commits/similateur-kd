@@ -12,13 +12,17 @@ const merged = window.wwmMergeData(
     quests: [{ name: "Explore Qinghe", done: false }, { name: "Find a hidden cave", done: true }],
     checks: { Coffres: false, Boss: true },
     journal: [{ date: "17/11/2026", note: "Premier voyage" }],
-    builds: [{ name: "Lame", details: "Build local" }]
+    builds: [{ name: "Lame", details: "Build local" }],
+    mapNotes: [{ id: "local-note", region: "central", title: "Grotte" }],
+    mapRegion: "central"
   },
   {
     quests: [{ name: "Explore Qinghe", done: true }, { name: "Finish tutorial", done: true }],
     checks: { Coffres: true, Secrets: true },
     journal: [{ date: "17/11/2026", note: "Premier voyage" }, { date: "16/11/2026", note: "Ancienne note" }],
-    builds: [{ name: "Lame", details: "Build local" }, { name: "Arc", details: "Build distant" }]
+    builds: [{ name: "Lame", details: "Build local" }, { name: "Arc", details: "Build distant" }],
+    mapNotes: [{ id: "remote-note", region: "hexi", title: "Ruines" }],
+    mapRegion: "hexi"
   }
 );
 
@@ -29,4 +33,6 @@ assert.equal(merged.checks.Coffres, false, "local unchecked discovery must overr
 assert.equal(merged.checks.Secrets, true, "remote-only discoveries must be preserved");
 assert.equal(merged.journal.length, 2, "duplicate journal entries must be collapsed");
 assert.equal(merged.builds.length, 2, "remote-only builds must be preserved");
+assert.equal(merged.mapNotes.length, 2, "personal map notes from both devices must be preserved");
+assert.equal(merged.mapRegion, "central", "the current device region must be retained");
 console.log("Account sync merge tests passed.");
