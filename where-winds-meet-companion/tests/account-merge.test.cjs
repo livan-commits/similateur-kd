@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v13"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v14"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -169,6 +169,12 @@ assert.ok(appSource.includes("senseos.gg/wiki/where-winds-meet/regions/"), "regi
 
 assert.ok(appSource.includes("toLocaleLowerCase(\"fr\")"), "codex search must be case-insensitive for French text");
 assert.ok(appSource.includes("11 voies et leurs arts/passifs nommés"), "codex must disclose the scope and limits of its catalogue");
+assert.ok(appSource.includes("const codexRegions=["), "codex must include region unlock reference entries");
+assert.ok(appSource.includes("const codexCampaigns=["), "codex must include campaign entries through Version 2.4");
+assert.ok(appSource.includes('kind:"Boss mondial"'), "codex must index the 31 world bosses");
+assert.ok(appSource.includes("<option>Région</option><option>Campagne</option><option>Boss mondial</option>"), "codex filters must include regions campaigns and world bosses");
+assert.ok(appSource.includes("34 Inner Ways nommés, 12 régions, 14 campagnes et 31 boss mondiaux"), "codex must display its documented catalogue coverage");
+
 assert.ok(!appSource.includes("Le catalogue est en cours de constitution"), "codex must not remain an empty placeholder");
 
 
