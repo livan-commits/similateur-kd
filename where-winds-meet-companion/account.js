@@ -20,7 +20,9 @@
     const builds=new Map();
     (remote.builds||[]).concat(local.builds||[]).forEach(function(b){builds.set(String(b.name||"")+"|"+String(b.details||""),b);});
     const checks=Object.assign({},remote.checks||{},local.checks||{});
-    return {quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:checks,builds:Array.from(builds.values())};
+    const mapNotes=new Map();
+    (remote.mapNotes||[]).concat(local.mapNotes||[]).forEach(function(n){if(n&&n.id)mapNotes.set(String(n.id),n);});
+    return Object.assign({},remote,local,{quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:checks,builds:Array.from(builds.values()),mapNotes:Array.from(mapNotes.values()),mapRegion:local.mapRegion||remote.mapRegion||"central"});
   }
   async function sync(){
     if(!client||!user)return;
