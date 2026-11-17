@@ -9,6 +9,9 @@ on:
       - 'spotify-remote/kode/**'
       - '.github/workflows/spotify-remote-kode.yml'
   workflow_dispatch:
+concurrency:
+  group: spotify-remote-kode
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
