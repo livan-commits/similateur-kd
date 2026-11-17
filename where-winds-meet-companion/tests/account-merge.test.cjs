@@ -103,7 +103,7 @@ assert.ok(appSource.includes("allthings.how/feng-ruzhi-in-where-winds-meet-locat
 assert.ok(appSource.includes("boule de soie"), "Feng Ruzhi strategy must explain the Silk Ball fail condition");
 assert.ok(appSource.includes("allthings.how/where-winds-meet-wandering-ark-boss-fight-made-simple"), "Wandering Ark strategy must link to its phase guide");
 assert.ok(appSource.includes("quatre branches desséchées de lune"), "Wandering Ark strategy must target the four phase-one weak points");
-assert.ok(appSource.includes("www.reddit.com/r/WhereWindsMeet/comments/1sk6qif/moongazing-maiden"), "Moongazing Maiden strategy must identify its community source");
+assert.ok(appSource.includes("www.reddit.com/r/WhereWindsMeet/comments/1sk6qif/moongazing_maiden"), "Moongazing Maiden strategy must identify its community source");
 assert.ok(appSource.includes("Cloud Leap"), "Moongazing Maiden strategy must describe the phase transition safe-zone action");
 assert.ok(appSource.includes("cheatbook.de/files/wherewindsmeet.htm"), "Everdeer and Pocketrupt Circus strategy source must be linked");
 assert.ok(appSource.includes("Deer's Blessing"), "Everdeer strategy must explain the green-orb healing mechanic");
