@@ -13,27 +13,27 @@
 /** Where the lines sit, in pixels from the middle of the glass. Well inside
  *  the corners, and far enough apart not to touch at these sizes. */
 #define SR_TIME_DY          (-170)
-#define DL_DATE_DY          (-135)
-#define DL_TITLE_DY         (-105)
-#define DL_COUNT_DY         (-35)
-#define DL_TOUCH_DY         35
-#define DL_BRIGHT_DY        75
-#define DL_HINT_DY          125
-#define DL_HINT2_DY         150
+#define SR_DATE_DY          (-135)
+#define SR_TITLE_DY         (-105)
+#define SR_COUNT_DY         (-35)
+#define SR_TOUCH_DY         35
+#define SR_BRIGHT_DY        75
+#define SR_HINT_DY          125
+#define SR_HINT2_DY         150
 
 /** How often the time on the glass is read again, ms. */
-#define DL_CLOCK_MS         1000U
+#define SR_CLOCK_MS         1000U
 
 /** How far one press of up or down moves the brightness, per cent. */
-#define DL_BRIGHT_STEP      20U
+#define SR_BRIGHT_STEP      20U
 
 /** Days in a week: kode_sys_time_t's weekday runs 0 (Sunday) to 6. */
-#define DL_WEEK_DAYS        7U
+#define SR_WEEK_DAYS        7U
 
 /** @brief This AO's private signals. Posted to itself, never published. */
 enum SpotifyUiSignals {
-    DL_TICK_SIG = MAX_SIG,  /**< The render pass: kscreen's one-shot.  */
-    DL_CLOCK_SIG            /**< The time on the glass: a one-shot too. */
+    SR_TICK_SIG = MAX_SIG,  /**< The render pass: kscreen's one-shot.  */
+    SR_CLOCK_SIG            /**< The time on the glass: a one-shot too. */
 };
 
 /** @brief The AO's own state, private to this file. */
@@ -48,7 +48,7 @@ typedef struct {
     lv_obj_t * bright;    /**< The brightness this AO set.                */
     uint32_t   presses;   /**< Presses and taps since the panel came up.  */
     uint8_t    bright_pct; /**< The panel's level, per cent.              */
-} DisplayLvgl;
+} SpotifyUi;
 
 /* The queue and the stack, written out as the reference example does. The
  * queue's depth follows kode_sys.h's one queue rule ("Queue depth"): no
@@ -63,13 +63,13 @@ typedef struct {
 static QEvtPtr     l_queue[KQP_AO_QUEUE_LEN];
 static StackType_t l_stack[KQP_AO_STACK_BYTES / sizeof(StackType_t)];
 
-static DisplayLvgl l_ao;
-QActive * const AO_DisplayLvgl = &l_ao.super;
+static SpotifyUi l_ao;
+QActive * const AO_SpotifyUi = &l_ao.super;
 
-static QState DisplayLvgl_initial(DisplayLvgl * const me, void const * const par);
-static QState DisplayLvgl_running(DisplayLvgl * const me, QEvt const * const e);
-static QState DisplayLvgl_waiting(DisplayLvgl * const me, QEvt const * const e);
-static QState DisplayLvgl_drawing(DisplayLvgl * const me, QEvt const * const e);
+static QState SpotifyUi_initial(SpotifyUi * const me, void const * const par);
+static QState SpotifyUi_running(SpotifyUi * const me, QEvt const * const e);
+static QState SpotifyUi_waiting(SpotifyUi * const me, QEvt const * const e);
+static QState SpotifyUi_drawing(SpotifyUi * const me, QEvt const * const e);
 
 /* ---- What is on the glass ------------------------------------------------ */
 /* Only this AO's thread calls lv_*, which is why LVGL needs no lock. */
@@ -100,7 +100,7 @@ static lv_obj_t * line_new(const char * text, const lv_font_t * font,
  *
  * @param me The AO.
  */
-static void count_bump(DisplayLvgl * const me)
+static void count_bump(SpotifyUi * const me)
 {
     (void)spotify_ble_send(SPOTIFY_CMD_PLAY_PAUSE);
     lv_label_set_text(me->count, "PLAY / PAUSE");
@@ -112,19 +112,19 @@ static void count_bump(DisplayLvgl * const me)
  *
  * @param me The AO.
  */
-static void clock_show(DisplayLvgl const * const me)
+static void clock_show(SpotifyUi const * const me)
 {
     /* The weekday's short name, indexed by kode_sys_time_t's weekday. */
-    static const char * const DL_DAYS[DL_WEEK_DAYS] = {
+    static const char * const SR_DAYS[SR_WEEK_DAYS] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
     kode_sys_time_t now;
 
-    if ( (kode_sys_clock_local(&now) == KODE_OK) && (now.weekday < DL_WEEK_DAYS) )
+    if ( (kode_sys_clock_local(&now) == KODE_OK) && (now.weekday < SR_WEEK_DAYS) )
     {
         lv_label_set_text_fmt(me->time, "%02u:%02u:%02u", (unsigned)now.hour,
                               (unsigned)now.minute, (unsigned)now.second);
-        lv_label_set_text_fmt(me->date, "%s %04u-%02u-%02u", DL_DAYS[now.weekday],
+        lv_label_set_text_fmt(me->date, "%s %04u-%02u-%02u", SR_DAYS[now.weekday],
                               (unsigned)now.year, (unsigned)now.month,
                               (unsigned)now.day);
     }
@@ -141,7 +141,7 @@ static void clock_show(DisplayLvgl const * const me)
  * @param me The AO.
  * @param te The report: the point in glass pixels, and whether it is down.
  */
-static void touch_show(DisplayLvgl const * const me, TouchEvt const * const te)
+static void touch_show(SpotifyUi const * const me, TouchEvt const * const te)
 {
     if ( te->pressed )
     {
@@ -163,15 +163,15 @@ static void touch_show(DisplayLvgl const * const me, TouchEvt const * const te)
  * @param me The AO.
  * @param up true for brighter.
  */
-static void bright_step(DisplayLvgl * const me, bool up)
+static void bright_step(SpotifyUi * const me, bool up)
 {
     uint8_t pct = me->bright_pct;
 
     if ( up )
     {
-        if ( pct < (KODE_SYS_SCREEN_BRIGHT_MAX - DL_BRIGHT_STEP) )
+        if ( pct < (KODE_SYS_SCREEN_BRIGHT_MAX - SR_BRIGHT_STEP) )
         {
-            pct += (uint8_t)DL_BRIGHT_STEP;
+            pct += (uint8_t)SR_BRIGHT_STEP;
         }
         else
         {
@@ -180,9 +180,9 @@ static void bright_step(DisplayLvgl * const me, bool up)
     }
     else
     {
-        if ( pct > (KODE_SYS_SCREEN_BRIGHT_MIN + DL_BRIGHT_STEP) )
+        if ( pct > (KODE_SYS_SCREEN_BRIGHT_MIN + SR_BRIGHT_STEP) )
         {
-            pct -= (uint8_t)DL_BRIGHT_STEP;
+            pct -= (uint8_t)SR_BRIGHT_STEP;
         }
         else
         {
@@ -211,7 +211,7 @@ static void bright_step(DisplayLvgl * const me, bool up)
  */
 static void tap_cb(lv_event_t * e)
 {
-    count_bump((DisplayLvgl *)lv_event_get_user_data(e));
+    count_bump((SpotifyUi *)lv_event_get_user_data(e));
 }
 
 /**
@@ -223,7 +223,7 @@ static void tap_cb(lv_event_t * e)
  *
  * @param me The AO.
  */
-static void ui_build(DisplayLvgl * const me)
+static void ui_build(SpotifyUi * const me)
 {
     lv_obj_t * const scr = lv_screen_active();
 
@@ -233,33 +233,33 @@ static void ui_build(DisplayLvgl * const me)
     lv_obj_add_event_cb(scr, &tap_cb, LV_EVENT_CLICKED, me);
 
     me->time = line_new("--:--:--", &lv_font_montserrat_28, lv_color_white(),
-                        DL_TIME_DY);
+                        SR_TIME_DY);
     me->date = line_new("", &lv_font_montserrat_14,
-                        lv_palette_main(LV_PALETTE_GREY), DL_DATE_DY);
+                        lv_palette_main(LV_PALETTE_GREY), SR_DATE_DY);
     (void)line_new("SPOTIFY REMOTE", &lv_font_montserrat_28,
-                   lv_color_white(), DL_TITLE_DY);
+                   lv_color_white(), SR_TITLE_DY);
     me->count = line_new("READY", &lv_font_montserrat_48,
-                         lv_palette_main(LV_PALETTE_LIGHT_BLUE), DL_COUNT_DY);
+                         lv_palette_main(LV_PALETTE_LIGHT_BLUE), SR_COUNT_DY);
     me->touch = line_new("Connect phone with Android app", &lv_font_montserrat_14,
-                         lv_color_white(), DL_TOUCH_DY);
+                         lv_color_white(), SR_TOUCH_DY);
     me->bright = line_new("", &lv_font_montserrat_14, lv_color_white(),
-                          DL_BRIGHT_DY);
+                          SR_BRIGHT_DY);
     lv_label_set_text_fmt(me->bright, "brightness %u%%", (unsigned)me->bright_pct);
     (void)line_new("TOP / TAP: PLAY-PAUSE   BOT: EXIT", &lv_font_montserrat_14,
-                   lv_palette_main(LV_PALETTE_GREY), DL_HINT_DY);
+                   lv_palette_main(LV_PALETTE_GREY), SR_HINT_DY);
     (void)line_new("LEFT: PREV   RIGHT: NEXT   UP/DOWN: VOL", &lv_font_montserrat_14,
-                   lv_palette_main(LV_PALETTE_GREY), DL_HINT2_DY);
+                   lv_palette_main(LV_PALETTE_GREY), SR_HINT2_DY);
 }
 
 /* ---- The AO -------------------------------------------------------------- */
 
 void SpotifyUi_ctor(void)
 {
-    DisplayLvgl * const me = &l_ao;
+    SpotifyUi * const me = &l_ao;
 
-    QActive_ctor(&me->super, Q_STATE_CAST(&DisplayLvgl_initial));
-    kscreen_ctor(&me->screen, &me->super, (enum_t)DL_TICK_SIG);
-    QTimeEvt_ctorX(&me->clock, &me->super, (enum_t)DL_CLOCK_SIG, 0U);
+    QActive_ctor(&me->super, Q_STATE_CAST(&SpotifyUi_initial));
+    kscreen_ctor(&me->screen, &me->super, (enum_t)SR_TICK_SIG);
+    QTimeEvt_ctorX(&me->clock, &me->super, (enum_t)SR_CLOCK_SIG, 0U);
     me->count      = NULL;
     me->time       = NULL;
     me->date       = NULL;
@@ -271,13 +271,13 @@ void SpotifyUi_ctor(void)
 
 void SpotifyUi_start(void)
 {
-    QActive_setAttr(AO_DisplayLvgl, TASK_NAME_ATTR, "spotify_ui");
+    QActive_setAttr(AO_SpotifyUi, TASK_NAME_ATTR, "spotify_ui");
 
     /* KODE_PRIO_USER_GUI, not KODE_PRIO_USER_LOW: it is the level the SDK keeps
      * for a renderer, just above AO_Net and below every owner. Rendering is the
      * heaviest work in the system and the least urgent, and here a slow frame
      * can only ever delay itself. */
-    QACTIVE_START(AO_DisplayLvgl, KODE_PRIO_USER_GUI,
+    QACTIVE_START(AO_SpotifyUi, KODE_PRIO_USER_GUI,
                   l_queue, Q_DIM(l_queue),
                   l_stack, sizeof(l_stack),
                   (void *)0);
@@ -286,7 +286,7 @@ void SpotifyUi_start(void)
 /**
  * @brief The initial transition: subscribe, then ask.
  *
- * It runs in the thread that calls DisplayLvgl_start(), before the AO's own
+ * It runs in the thread that calls SpotifyUi_start(), before the AO's own
  * task exists, and that is after kode_init() has returned - the condition
  * kscreen_start()'s question needs. kscreen_start() subscribes before it asks:
  * the answer can come the instant the question is posted, and an AO that asked
@@ -294,9 +294,9 @@ void SpotifyUi_start(void)
  *
  * @param me  The AO.
  * @param par Unused.
- * @return The transition to DisplayLvgl_waiting.
+ * @return The transition to SpotifyUi_waiting.
  */
-static QState DisplayLvgl_initial(DisplayLvgl * const me, void const * const par)
+static QState SpotifyUi_initial(SpotifyUi * const me, void const * const par)
 {
     (void)par;
 
@@ -304,7 +304,7 @@ static QState DisplayLvgl_initial(DisplayLvgl * const me, void const * const par
     kscreen_start(&me->screen);
 
     KLOG_I(TAG, "up; asked AO_Display whether the panel is there");
-    return Q_TRAN(&DisplayLvgl_waiting);
+    return Q_TRAN(&SpotifyUi_waiting);
 }
 
 /**
@@ -315,7 +315,7 @@ static QState DisplayLvgl_initial(DisplayLvgl * const me, void const * const par
  * @param e  The event.
  * @return Q_HANDLED() for what it handles, Q_SUPER() otherwise.
  */
-static QState DisplayLvgl_running(DisplayLvgl * const me, QEvt const * const e)
+static QState SpotifyUi_running(SpotifyUi * const me, QEvt const * const e)
 {
     QState status;
 
@@ -354,9 +354,9 @@ static QState DisplayLvgl_running(DisplayLvgl * const me, QEvt const * const e)
  *
  * @param me The AO.
  * @param e  The event.
- * @return Q_HANDLED(), a transition to DisplayLvgl_drawing, or Q_SUPER().
+ * @return Q_HANDLED(), a transition to SpotifyUi_drawing, or Q_SUPER().
  */
-static QState DisplayLvgl_waiting(DisplayLvgl * const me, QEvt const * const e)
+static QState SpotifyUi_waiting(SpotifyUi * const me, QEvt const * const e)
 {
     QState status;
 
@@ -375,7 +375,7 @@ static QState DisplayLvgl_waiting(DisplayLvgl * const me, QEvt const * const e)
                 {
                     me->bright_pct = st->bright;
                 }
-                status = Q_TRAN(&DisplayLvgl_drawing);
+                status = Q_TRAN(&SpotifyUi_drawing);
             }
             else
             {
@@ -386,7 +386,7 @@ static QState DisplayLvgl_waiting(DisplayLvgl * const me, QEvt const * const e)
             break;
         }
         default: {
-            status = Q_SUPER(&DisplayLvgl_running);
+            status = Q_SUPER(&SpotifyUi_running);
             break;
         }
     }
@@ -401,7 +401,7 @@ static QState DisplayLvgl_waiting(DisplayLvgl * const me, QEvt const * const e)
  * @param e  The event.
  * @return Q_HANDLED() for what it handles, Q_SUPER() otherwise.
  */
-static QState DisplayLvgl_drawing(DisplayLvgl * const me, QEvt const * const e)
+static QState SpotifyUi_drawing(SpotifyUi * const me, QEvt const * const e)
 {
     QState status;
 
@@ -410,19 +410,19 @@ static QState DisplayLvgl_drawing(DisplayLvgl * const me, QEvt const * const e)
         case Q_ENTRY_SIG: {
             ui_build(me);
             clock_show(me);
-            QTimeEvt_armX(&me->clock, KQP_TICKS_PER_MS(DL_CLOCK_MS), 0U);
+            QTimeEvt_armX(&me->clock, KQP_TICKS_PER_MS(SR_CLOCK_MS), 0U);
             status = Q_HANDLED();
             break;
         }
-        case DL_CLOCK_SIG: {
+        case SR_CLOCK_SIG: {
             clock_show(me);
-            QTimeEvt_armX(&me->clock, KQP_TICKS_PER_MS(DL_CLOCK_MS), 0U);
+            QTimeEvt_armX(&me->clock, KQP_TICKS_PER_MS(SR_CLOCK_MS), 0U);
             status = Q_HANDLED();
             break;
         }
         /* Always to kscreen_tick(), which re-arms the one-shot: a periodic tick
          * would fill the queue behind a slow frame, and a full queue asserts. */
-        case DL_TICK_SIG: {
+        case SR_TICK_SIG: {
             kscreen_tick(&me->screen);
             status = Q_HANDLED();
             break;
@@ -473,12 +473,12 @@ static QState DisplayLvgl_drawing(DisplayLvgl * const me, QEvt const * const e)
             else
             {
                 /* The bottom button is the parent's. */
-                status = Q_SUPER(&DisplayLvgl_running);
+                status = Q_SUPER(&SpotifyUi_running);
             }
             break;
         }
         default: {
-            status = Q_SUPER(&DisplayLvgl_running);
+            status = Q_SUPER(&SpotifyUi_running);
             break;
         }
     }
