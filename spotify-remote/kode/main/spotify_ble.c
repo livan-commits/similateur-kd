@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include <freertos/FreeRTOS.h>
 #include "kode.h"
 #include "kode_log.h"
 #include "spotify_ble.h"
@@ -9,6 +11,9 @@
 #define TAG "spotify_ble"
 #define SPOTIFY_CHR_COMMAND "command"
 #define SPOTIFY_CHR_PHONE_STATE "phone_state"
+
+static portMUX_TYPE s_state_mux = portMUX_INITIALIZER_UNLOCKED;
+static char s_phone_state[180] = "Waiting for Android companion";
 
 bool spotify_ble_send(spotify_command_t command)
 {
@@ -20,6 +25,17 @@ bool spotify_ble_send(spotify_command_t command)
     return ok;
 }
 
+bool spotify_ble_get_phone_state(char *out, size_t out_size)
+{
+    if ((out == NULL) || (out_size == 0U)) {
+        return false;
+    }
+    portENTER_CRITICAL(&s_state_mux);
+    (void)snprintf(out, out_size, "%s", s_phone_state);
+    portEXIT_CRITICAL(&s_state_mux);
+    return true;
+}
+
 /* Called by the Kode BLE event dispatcher. Keep the callback short: it only
  * validates and logs the latest phone metadata. LVGL is owned by its AO and
  * must not be touched from this callback thread. */
@@ -29,6 +45,19 @@ void spotify_ble_on_phone_state(const kode_event_t *event)
         (event->source != NULL) &&
         (strcmp(event->source, SPOTIFY_CHR_PHONE_STATE) == 0) &&
         (event->value > 0)) {
-        KLOG_I(TAG, "phone state received (%ld bytes)", (long)event->value);
+        size_t length = (size_t)event->value;
+        if (length >= sizeof(s_phone_state)) {
+            length = sizeof(s_phone_state) - 1U;
+        }
+        portENTER_CRITICAL(&s_state_mux);
+        memcpy(s_phone_state, event->text, length);
+        s_phone_state[length] = '\\0';
+        for (size_t i = 0U; i < length; i++) {
+            if (s_phone_state[i] == '|') {
+                s_phone_state[i] = '\\n';
+            }
+        }
+        portEXIT_CRITICAL(&s_state_mux);
+        KLOG_I(TAG, "phone media state updated");
     }
 }
