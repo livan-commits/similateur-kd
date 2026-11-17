@@ -72,8 +72,8 @@ Les valeurs `null` sont intentionnelles : aucune coordonnée ne doit être inven
 - [x] Choisir le backend cible : Supabase Auth + PostgreSQL.
 - [x] Préparer le schéma SQL initial avec RLS.
 - [ ] Créer/configurer le projet Supabase et ses clés publiques.
-- [ ] Implémenter inscription, connexion, déconnexion et récupération de compte.
-- [ ] Migrer les données locales vers un modèle synchronisable avec fusion hors ligne.
+- [x] Coder inscription, connexion, déconnexion et récupération de compte (activation réelle en attente de la configuration Supabase).
+- [x] Préparer la fusion des données locales et distantes, l'import/export JSON et la synchronisation différée (tests locaux de fusion ; validation Supabase de bout en bout encore en attente).
 - [ ] Évaluer un connecteur Windows en respectant les règles du jeu.
 - [ ] Évaluer séparément les possibilités sur PlayStation, Xbox et mobile.
 - [ ] Afficher explicitement les capacités réelles et l'état de chaque connecteur.
@@ -92,7 +92,7 @@ Sources techniques : [documentation d'intégration TH.GL](https://www.th.gl/deve
 
 ## 7. État actuel
 
-À la date de cette version, le compagnon possède une carte TH.GL intégrée avec chargement à la demande ; la progression propre au compagnon reste indépendante des cases cochées chez TH.GL. Le compagnon ne possède pas encore de projet Supabase configuré, de compte utilisateur actif, de synchronisation cloud réellement opérationnelle, de liaison NetEase ni de suivi automatique de position. Le code du client cloud et le schéma SQL sont préparés, mais le schéma n'a pas été appliqué ni testé sur une instance Supabase. Les données continuent donc d'être enregistrées dans le navigateur. La fusion actuelle conserve les entrées distinctes et donne priorité à l'état local en cas de doublon ; elle ne constitue pas encore une résolution complète des conflits entre modifications simultanées sur plusieurs appareils. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
+À la date de cette version, le compagnon possède une carte TH.GL intégrée avec chargement à la demande ; la progression propre au compagnon reste indépendante des cases cochées chez TH.GL. Le compte compagnon et la synchronisation cloud ne sont pas activables tant qu'un projet Supabase n'est pas configuré et que le schéma SQL n'a pas été appliqué ; aucune synchronisation de bout en bout n'a donc été testée. Les données restent enregistrées dans le navigateur. La fusion côté client utilise les horodatages pour arbitrer les états de quêtes et de découvertes ; en cas d'horodatage égal ou absent (anciennes sauvegardes), l'appareil en cours de fusion garde la priorité. Les suppressions de notes de carte sont propagées par des marqueurs de suppression (tombstones). Les entrées de journal et les builds sont fusionnés par dédoublonnage, sans gestion complète de leur suppression. Ces mécanismes ne règlent pas encore les écritures simultanées sur le serveur : il n'existe pas de contrôle atomique de révision/compare-and-swap, et des horloges d'appareils désynchronisées peuvent entraîner un mauvais arbitrage. Aucune liaison NetEase ni aucun suivi automatique de position n'est intégré. Ce document décrit l'état réel du développement, pas une promesse de fonctions déjà actives.
 
 
 ## 8. Suivi de position en direct : état de faisabilité
