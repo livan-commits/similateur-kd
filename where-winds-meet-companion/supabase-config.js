@@ -1,5 +1,5 @@
- // Public Supabase project settings only. Never put a service_role/secret key here.
+// Public Supabase project settings only. Never put a service_role/secret key here.
 window.WWM_SUPABASE_CONFIG = {
-  url: "YOUR_SUPABASE_PROJECT_URL",
-  anonKey: "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY"
+  url: "https://xqnnmqlhvfdifybewyaf.supabase.co",
+  anonKey: "sb_publishable_ejBa8dMOzO3OE116abcyZQ_N4-Etnd-"
 };
