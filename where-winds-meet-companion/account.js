@@ -64,6 +64,6 @@
   };
   if(client){
     client.auth.getSession().then(function(result){user=result.data.session&&result.data.session.user||null;const state=document.querySelector("#save-state");if(state&&user)state.textContent="● Compte connecté";});
-    client.auth.onAuthStateChange(function(event,session){user=session&&session.user||null;if(event==="PASSWORD_RECOVERY")recoveryMode=true;if(event==="SIGNED_OUT")recoveryMode=false;cloudReady=false;const state=document.querySelector("#save-state");if(state)state.textContent=user?"● Compte connecté":"● Sauvegarde locale";if(window.wwmDataApi&&window.wwmDataApi.getView()==="account")window.wwmDataApi.render("account");});
+    client.auth.onAuthStateChange(function(event,session){user=session&&session.user||null;if(event==="PASSWORD_RECOVERY")recoveryMode=true;if(event==="SIGNED_OUT"){recoveryMode=false;cloudReady=false;}else if(event==="SIGNED_IN"||event==="INITIAL_SESSION"){cloudReady=false;}const state=document.querySelector("#save-state");if(state)state.textContent=user?(cloudReady?"● Synchronisation activée":"● Compte connecté"):"● Sauvegarde locale";if(window.wwmDataApi&&window.wwmDataApi.getView()==="account")window.wwmDataApi.render("account");});
   }
 })();
