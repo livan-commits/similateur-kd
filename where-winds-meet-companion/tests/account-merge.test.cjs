@@ -55,6 +55,9 @@ assert.deepEqual(Array.from(conflictMerged.deletedMapNoteIds),["deleted-note"],"
 
 
 const schema = fs.readFileSync("where-winds-meet-companion/supabase/schema.sql", "utf8");
+const migration = fs.readFileSync("where-winds-meet-companion/supabase/migrations/202611170001_companion_state.sql", "utf8");
+assert.equal(migration, schema, "Supabase migration must match the reviewed schema exactly");
+
 assert.ok(schema.includes("create or replace function public.save_companion_state"), "SQL must define the revision-checked save function");
 assert.ok(schema.includes("security definer"), "the RPC must own the narrowly scoped write path");
 assert.ok(schema.includes("grant select on table public.companion_state to authenticated"), "authenticated clients must only read the table directly");
