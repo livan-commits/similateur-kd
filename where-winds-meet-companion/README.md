@@ -43,6 +43,6 @@ Les conditions de NetEase interdisent notamment certains logiciels non autorisé
 Les marqueurs communautaires seront identifiés comme tels et ne seront pas présentés comme des données officielles.
 
 ## Déploiement
-Le workflow GitHub Actions de ce compagnon valide les fichiers et prépare un artefact web. **Il ne déploie pas encore cette application sur une URL publique.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
+Le workflow GitHub Actions de ce compagnon vérifie les fichiers requis, la syntaxe JavaScript, la neutralité multiplateforme de l'interface et la présence des protections RLS du schéma SQL, puis prépare un artefact web. **Il ne déploie pas encore cette application sur une URL publique.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
 
 Projet indépendant, non affilié à Everstone Studio ou NetEase.
