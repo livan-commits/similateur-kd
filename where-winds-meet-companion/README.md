@@ -38,7 +38,7 @@ Les conditions de NetEase interdisent notamment certains logiciels non autorisé
 
 ## Sources de cartes
 - [Carte officielle Where Winds Meet](https://www.wherewindsmeetgame.com/map/)
-- [TH.GL — carte et base de données communautaires](https://wherewindsmeet.th.gl/)
+- [TH.GL — carte et base de données communautaires](https://wherewindsmeet.th.gl/)\n- [Where Guilds Meet — atlas communautaire, quêtes et itinéraires](https://www.whereguildsmeet.org/map)
 
 Les marqueurs communautaires seront identifiés comme tels et ne seront pas présentés comme des données officielles.
 
