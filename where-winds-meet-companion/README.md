@@ -23,7 +23,7 @@ Le but n'est pas de rester une simple encyclopédie. Le projet vise :
 
 ## État réel des connexions
 - **Compte compagnon :** pas encore implémenté. La version actuelle ne propose pas encore d'inscription ni de connexion.
-- **Synchronisation cloud :** pas encore implémentée ; les données sont actuellement stockées dans le navigateur.
+- **Synchronisation cloud :** pas encore implémentée ; le schéma Supabase est préparé, mais aucun projet backend n'est encore configuré. Les données sont actuellement stockées dans le navigateur.
 - **Connexion au compte NetEase / compte de plateforme :** aucune connexion n'est actuellement demandée ou effectuée. Aucun mot de passe, cookie ou jeton ne doit être communiqué au projet.
 - **Position du personnage en direct :** pas encore implémentée dans ce compagnon. Elle devra être évaluée séparément pour chaque plateforme et uniquement avec une méthode autorisée.
 - **Progression automatique des quêtes / objets :** pas encore implémentée.
