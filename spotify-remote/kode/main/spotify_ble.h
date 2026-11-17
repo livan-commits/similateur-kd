@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "kode.h"
 
 #define SPOTIFY_ART_WIDTH 112U
 #define SPOTIFY_ART_HEIGHT 112U
@@ -18,5 +19,5 @@ typedef enum {
 bool spotify_ble_send(spotify_command_t command);
 bool spotify_ble_get_phone_state(char *out, size_t out_size);
 bool spotify_ble_take_artwork(const uint8_t **pixels);
-void spotify_ble_on_phone_state(const struct kode_event *event);
+void spotify_ble_on_phone_state(const kode_event_t *event);
 void spotify_ble_on_artwork(const struct kode_event *event);
