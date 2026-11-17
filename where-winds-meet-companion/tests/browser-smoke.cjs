@@ -36,8 +36,8 @@ const { chromium } = require("playwright");
   mobile.on("pageerror", error => errors.push(error.message));
   await mobile.goto("http://127.0.0.1:4173/index.html", { waitUntil: "domcontentloaded" });
   await mobile.locator('#nav [data-view="codex"]').evaluate(element => element.click());
-  const mobileWidth = await mobile.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
-  assert.ok(mobileWidth.content <= mobileWidth.viewport + 1, "mobile layout should not introduce horizontal page overflow");
+  const mobileWidth = await mobile.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth, offenders: Array.from(document.querySelectorAll("body *")).map(el => ({ tag: el.tagName, id: el.id, cls: String(el.className || "").slice(0,80), left: Math.round(el.getBoundingClientRect().left), right: Math.round(el.getBoundingClientRect().right), width: Math.round(el.getBoundingClientRect().width) })).filter(el => el.right > innerWidth + 1 || el.left < -1).slice(0,20) }));
+  assert.ok(mobileWidth.content <= mobileWidth.viewport + 1, "mobile layout should not introduce horizontal page overflow: " + JSON.stringify(mobileWidth));
   await mobile.close();
 
   assert.deepEqual(errors, [], "the application should not throw browser runtime errors");
