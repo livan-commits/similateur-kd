@@ -35,7 +35,7 @@ idf.py build
 
 The resulting firmware image is `build/spotify_remote.bin`. Install using the official KodeOS `tools/kcli.py` command for your connected Dot.
 
-## Build the Android companion
+## Download the Android APK\n\nThe debug APK is published as a GitHub Actions artifact after each successful Android build: [Android companion build runs](https://github.com/livan-commits/similateur-kd/actions/workflows/spotify-remote-android.yml). Open the latest successful run and download the `kode-spotify-remote-debug` artifact.\n\n## Build the Android companion
 
 Open `spotify-remote/android` in Android Studio and build the `app` debug variant. On the phone:
 1. Install and open Kode Spotify Remote.
