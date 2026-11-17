@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v20"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v21"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -178,6 +178,10 @@ assert.ok(appSource.includes('name:"Silken Step"'), "codex must include the Vers
 assert.ok(appSource.includes("codex-filter"), "codex must expose category filtering");
 assert.ok(appSource.includes("function codexResults(entries)"), "codex must render searchable source-linked entries");
 assert.ok(appSource.includes("const regionMilestones=["), "quest tracker must include a sourced region unlock catalogue");
+assert.ok(appSource.includes("wherewindsmeet.th.gl/activities-tracker"), "quest page must link the daily and weekly checklist");
+assert.ok(appSource.includes("wherewindsmeet.th.gl/schedule"), "quest page must link event and reset schedules");
+assert.ok(appSource.includes("toutes les activités ne partagent pas forcément le même reset"), "quest page must warn that recurring activities can have different reset times");
+
 assert.ok(appSource.includes("Hidden Mountain · Hutuo"), "region checklist must include the Version 2.4 Hutuo unlock");
 assert.ok(appSource.includes("Away to Qingzhou"), "region checklist must include Qingzhou's Lost Chapter prerequisite");
 assert.ok(appSource.includes("Hues of a Hidden World"), "region checklist must include Qinchuan's exploration unlock");
