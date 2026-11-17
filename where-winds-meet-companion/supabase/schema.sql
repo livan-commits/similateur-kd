@@ -72,7 +72,7 @@ returns table(saved boolean, revision bigint)
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $function$
 declare
   v_revision bigint;
 begin
@@ -112,7 +112,7 @@ begin
 
   return query select false, v_revision;
 end;
-$;
+$function$;
 
 revoke all on function public.save_companion_state(bigint, integer, jsonb) from public, anon;
 grant execute on function public.save_companion_state(bigint, integer, jsonb) to authenticated;
