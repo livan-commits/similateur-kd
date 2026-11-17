@@ -2,6 +2,12 @@
 
 Independent native Kode Dot app plus Android companion. The Dot talks to the phone over a custom BLE GATT service; the Android companion controls the active Spotify Android MediaSession. No Spotify Premium or Spotify Web API credentials are used.
 
+## Build status
+
+- Kode Dot firmware build: **passed** with ESP-IDF 6.1 in GitHub Actions. [Build run and firmware artifact](https://github.com/livan-commits/similateur-kd/actions/runs/43989890205).
+- Android debug build: **passed**. [Build run and APK artifact](https://github.com/livan-commits/similateur-kd/actions/runs/43989629623).
+- Neither build has yet been tested on a physical Kode Dot / Android phone pair.
+
 ## Architecture
 
 - `kode/`: native Kode SDK v0.1.1 application for the ESP32-P4 / Kode Dot.
@@ -21,7 +27,7 @@ Dot to phone (notification, one byte):
 
 Phone to Dot (write, UTF-8 text):
 - `title|artist|state` (state is `playing`, `paused`, or `idle`).
-- Payload is best-effort and truncated to the negotiated ATT payload size. The current firmware logs it; rendering live metadata is the next UI integration task.
+- Payload is best-effort and truncated to the negotiated ATT payload size.
 
 ## Build the Kode app
 
@@ -35,7 +41,11 @@ idf.py build
 
 The resulting firmware image is `build/spotify_remote.bin`. Install using the official KodeOS `tools/kcli.py` command for your connected Dot.
 
-## Download the Android APK\n\nThe debug APK is published as a GitHub Actions artifact after each successful Android build: [Android companion build runs](https://github.com/livan-commits/similateur-kd/actions/workflows/spotify-remote-android.yml). Open the latest successful run and download the `kode-spotify-remote-debug` artifact.\n\n## Build the Android companion
+## Download the Android APK
+
+The debug APK is published as a GitHub Actions artifact after each successful Android build: [Android companion build runs](https://github.com/livan-commits/similateur-kd/actions/workflows/spotify-remote-android.yml). Open the successful run and download the `kode-spotify-remote-debug` artifact.
+
+## Build the Android companion
 
 Open `spotify-remote/android` in Android Studio and build the `app` debug variant. On the phone:
 1. Install and open Kode Spotify Remote.
@@ -45,7 +55,8 @@ Open `spotify-remote/android` in Android Studio and build the `app` debug varian
 
 ## Current limitations
 
-- This is a first implementation scaffold; it has not been compiled or tested on physical hardware in this environment.
-- The native Dot UI currently exposes the transport controls and sends BLE commands; live title/artist rendering is not yet wired into the LVGL screen.
+- The current native Dot UI displays the controls and basic status text; live title/artist rendering is not yet wired into the LVGL screen.
+- Album artwork transfer and display are not implemented in this build; this is the next feature being developed.
 - Android MediaSession access depends on Android granting Notification access and Spotify exposing an active session.
 - Volume keys adjust the phone's music stream volume.
+- Physical-device BLE and playback tests are still required.
