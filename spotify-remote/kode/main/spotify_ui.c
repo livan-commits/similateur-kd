@@ -25,7 +25,6 @@
 #define SR_CLOCK_MS         1000U
 
 /** How far one press of up or down moves the brightness, per cent. */
-#define SR_BRIGHT_STEP      20U
 
 /** Days in a week: kode_sys_time_t's weekday runs 0 (Sunday) to 6. */
 #define SR_WEEK_DAYS        7U
@@ -47,7 +46,6 @@ typedef struct {
     lv_obj_t * touch;     /**< The finger's point.                        */
     lv_obj_t * bright;    /**< The brightness this AO set.                */
     uint32_t   presses;   /**< Presses and taps since the panel came up.  */
-    uint8_t    bright_pct; /**< The panel's level, per cent.              */
 } SpotifyUi;
 
 /* The queue and the stack, written out as the reference example does. The
@@ -204,7 +202,7 @@ static void ui_build(SpotifyUi * const me)
     lv_label_set_long_mode(me->touch, LV_LABEL_LONG_DOT);
     me->bright = line_new("", &lv_font_montserrat_14, lv_color_white(),
                           SR_BRIGHT_DY);
-    lv_label_set_text_fmt(me->bright, "brightness %u%%", (unsigned)me->bright_pct);
+    lv_label_set_text(me->bright, "Bluetooth LE controls ready");
     (void)line_new("TOP / TAP: PLAY-PAUSE   BOT: EXIT", &lv_font_montserrat_14,
                    lv_palette_main(LV_PALETTE_GREY), SR_HINT_DY);
     (void)line_new("LEFT: PREV   RIGHT: NEXT   UP/DOWN: VOL", &lv_font_montserrat_14,
@@ -226,7 +224,6 @@ void SpotifyUi_ctor(void)
     me->touch      = NULL;
     me->bright     = NULL;
     me->presses    = 0U;
-    me->bright_pct = (uint8_t)KODE_SYS_SCREEN_BRIGHT_MAX;
 }
 
 void SpotifyUi_start(void)
@@ -329,12 +326,6 @@ static QState SpotifyUi_waiting(SpotifyUi * const me, QEvt const * const e)
             {
                 KLOG_I(TAG, "panel up at %u%%, LVGL running",
                        (unsigned)st->bright);
-                /* The steps start from the level the panel is driven at:
-                 * the user's own, from kodeOS's settings. */
-                if ( st->bright >= KODE_SYS_SCREEN_BRIGHT_MIN )
-                {
-                    me->bright_pct = st->bright;
-                }
                 status = Q_TRAN(&SpotifyUi_drawing);
             }
             else
