@@ -55,10 +55,10 @@ void spotify_ble_on_phone_state(const kode_event_t *event)
         }
         portENTER_CRITICAL(&s_state_mux);
         memcpy(s_phone_state, event->text, length);
-        s_phone_state[length] = '\\0';
+        s_phone_state[length] = '\0';
         for (size_t i = 0U; i < length; i++) {
             if (s_phone_state[i] == '|') {
-                s_phone_state[i] = '\\n';
+                s_phone_state[i] = '\n';
             }
         }
         portEXIT_CRITICAL(&s_state_mux);
