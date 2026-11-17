@@ -13,16 +13,20 @@
     return '<div class="card"><span class="tag">COMPTE CONNECTÉ</span><h2 style="margin:14px 0">'+esc(user.email||"Joueur connecté")+'</h2><p class="muted small">Ton compte compagnon est connecté. Synchronise tes données pour les retrouver sur tes autres appareils.</p><div class="action-row"><button class="btn primary" id="sync-now">Synchroniser maintenant</button><button class="btn" id="sign-out">Se déconnecter</button></div><p class="small muted" id="auth-message" aria-live="polite">'+(cloudReady?"Synchronisation active.":"Connecté — première synchronisation à effectuer.")+'</p></div>';
   }
   function merge(local,remote){
+    const newer=function(a,b){const ta=Date.parse(a&&a.updatedAt||"")||0,tb=Date.parse(b&&b.updatedAt||"")||0;return ta>tb?a:b;};
     const quests=new Map();
-    (remote.quests||[]).concat(local.quests||[]).forEach(function(q){const k=String(q.name||"").trim().toLowerCase();if(!k)return;const p=quests.get(k);quests.set(k,Object.assign({},p||{},q));});
+    (remote.quests||[]).concat(local.quests||[]).forEach(function(q){const k=String(q.name||"").trim().toLowerCase();if(!k)return;const prev=quests.get(k);quests.set(k,prev?Object.assign({},prev,newer(q,prev)):q);});
     const journal=new Map();
     (remote.journal||[]).concat(local.journal||[]).forEach(function(j){journal.set(String(j.date||"")+"|"+String(j.note||""),j);});
     const builds=new Map();
     (remote.builds||[]).concat(local.builds||[]).forEach(function(b){builds.set(String(b.name||"")+"|"+String(b.details||""),b);});
-    const checks=Object.assign({},remote.checks||{},local.checks||{});
+    const checks=Object.assign({},remote.checks||{});
+    const checkUpdatedAt=Object.assign({},remote.checkUpdatedAt||{});
+    Object.keys(local.checks||{}).forEach(function(k){const lt=Date.parse((local.checkUpdatedAt||{})[k]||"")||0,rt=Date.parse(checkUpdatedAt[k]||"")||0;if(!(k in checks)||lt>=rt){checks[k]=local.checks[k];if((local.checkUpdatedAt||{})[k])checkUpdatedAt[k]=local.checkUpdatedAt[k];}});
+    const deleted=new Set((remote.deletedMapNoteIds||[]).concat(local.deletedMapNoteIds||[]).map(String));
     const mapNotes=new Map();
-    (remote.mapNotes||[]).concat(local.mapNotes||[]).forEach(function(n){if(n&&n.id)mapNotes.set(String(n.id),n);});
-    return Object.assign({},remote,local,{quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:checks,builds:Array.from(builds.values()),mapNotes:Array.from(mapNotes.values()),mapRegion:local.mapRegion||remote.mapRegion||"central"});
+    (remote.mapNotes||[]).concat(local.mapNotes||[]).forEach(function(n){if(n&&n.id&&!deleted.has(String(n.id))){const id=String(n.id),prev=mapNotes.get(id);mapNotes.set(id,prev?newer(n,prev):n);}});
+    return Object.assign({},remote,local,{quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:checks,checkUpdatedAt:checkUpdatedAt,builds:Array.from(builds.values()),mapNotes:Array.from(mapNotes.values()),deletedMapNoteIds:Array.from(deleted),mapRegion:local.mapRegion||remote.mapRegion||"central"});
   }
   async function sync(){
     if(!client||!user||syncInFlight)return;
