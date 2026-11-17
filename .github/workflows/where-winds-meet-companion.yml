@@ -26,6 +26,8 @@ jobs:
           test -s where-winds-meet-companion/supabase-config.js
           test -s where-winds-meet-companion/manifest.webmanifest
           test -s where-winds-meet-companion/icon.svg
+          test -s where-winds-meet-companion/vercel.json
+          node -e 'JSON.parse(require("fs").readFileSync("where-winds-meet-companion/vercel.json","utf8"))'
           node -e 'const m=JSON.parse(require("fs").readFileSync("where-winds-meet-companion/manifest.webmanifest","utf8")); if(!m.icons?.some(i=>i.src==="./icon.svg")) process.exit(1)'
           test -s where-winds-meet-companion/service-worker.js
           test -s where-winds-meet-companion/CONNEXIONS.md
