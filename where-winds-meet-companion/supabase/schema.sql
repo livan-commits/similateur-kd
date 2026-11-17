@@ -60,6 +60,63 @@ create trigger companion_state_updated_at
   for each row
   execute function public.set_companion_state_updated_at();
 
+-- Atomic compare-and-swap write: concurrent devices cannot silently overwrite
+-- a snapshot based on an older revision. A NULL expected revision means "insert
+-- only if no row exists". A false result asks the client to re-read and merge.
+create or replace function public.save_companion_state(
+  p_expected_revision bigint,
+  p_schema_version integer,
+  p_payload jsonb
+)
+returns table(saved boolean, revision bigint)
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  v_revision bigint;
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+  if p_schema_version is null or p_schema_version <= 0 then
+    raise exception 'Invalid schema version' using errcode = '22023';
+  end if;
+  if p_payload is null or jsonb_typeof(p_payload) is distinct from 'object' then
+    raise exception 'Payload must be a JSON object' using errcode = '22023';
+  end if;
+
+  if p_expected_revision is null then
+    insert into public.companion_state as current_state (user_id, schema_version, payload)
+    values (auth.uid(), p_schema_version, p_payload)
+    on conflict (user_id) do nothing
+    returning current_state.revision into v_revision;
+  else
+    update public.companion_state as current_state
+       set schema_version = p_schema_version,
+           payload = p_payload
+     where current_state.user_id = auth.uid()
+       and current_state.revision = p_expected_revision
+    returning current_state.revision into v_revision;
+  end if;
+
+  if v_revision is not null then
+    return query select true, v_revision;
+    return;
+  end if;
+
+  select current_state.revision
+    into v_revision
+    from public.companion_state as current_state
+   where current_state.user_id = auth.uid();
+
+  return query select false, v_revision;
+end;
+$;
+
+revoke all on function public.save_companion_state(bigint, integer, jsonb) from public, anon;
+grant execute on function public.save_companion_state(bigint, integer, jsonb) to authenticated;
+
 comment on table public.companion_state is
   'Private per-user companion data. Access is restricted by RLS to auth.uid().';
 comment on column public.companion_state.payload is
