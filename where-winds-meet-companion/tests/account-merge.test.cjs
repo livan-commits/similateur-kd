@@ -68,12 +68,16 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v15"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v16"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
 assert.ok(serviceWorker.includes('"./icon.svg"'), "offline cache must include the PWA icon");
 assert.ok(fs.existsSync("where-winds-meet-companion/icon.svg"), "PWA icon asset must exist");
+assert.ok(fs.readFileSync("where-winds-meet-companion/index.html", "utf8").includes('id="install-btn"'), "PWA install button must be present");
+assert.ok(appSource.includes('beforeinstallprompt'), "PWA install button must use the browser install event");
+assert.ok(appSource.includes('promptEvent.userChoice'), "PWA install UI must only report an accepted install after user choice");
+
 const vercel = JSON.parse(fs.readFileSync("where-winds-meet-companion/vercel.json", "utf8"));
 assert.ok(vercel.headers.some(rule => rule.source === "/service-worker.js"), "Vercel must prevent stale service-worker caching");
 assert.ok(vercel.headers.some(rule => rule.source === "/(.*)" && rule.headers.some(h => h.key === "X-Content-Type-Options")), "Vercel must apply basic security headers");
