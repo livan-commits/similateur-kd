@@ -1,31 +1,31 @@
 # Where Winds Meet — Ultimate Companion
 
-Compagnon non officiel, indépendant du jeu, pensé comme second écran pour les joueurs Xbox.
+Compagnon communautaire indépendant, en français, conçu comme deuxième écran pour les joueurs Xbox.
 
-## Objectif
-Réunir dans une application web responsive :
-- carte communautaire (données et coordonnées à sourcer avant publication) ;
-- suivi manuel des lieux, coffres, secrets et ressources ;
-- journal de quêtes et objectifs ;
-- fiches de boss et stratégies ;
-- builds, armes et compétences ;
-- encyclopédie et recherche globale.
+## Fonctions présentes dans cette première version
+- Tableau de bord de progression.
+- Carnet d'objectifs et cases à cocher.
+- Suivi manuel de catégories de découvertes.
+- Journal d'aventure.
+- Fiches personnelles de builds.
+- Notes de stratégie pour les boss.
+- Export JSON de la progression.
+- Sauvegarde locale dans le navigateur.
+- Structure PWA et service worker pour l'utilisation hors ligne après première visite.
 
-## État du projet
-**Phase 0 — fondations.** L'interface et les outils de suivi local sont en préparation. Aucune connexion au compte NetEase/Xbox ni lecture de la mémoire du jeu n'est implémentée. Le suivi automatique de position sur Xbox n'est pas confirmé et ne doit pas être présenté comme disponible.
+## Fonctions prévues
+- Carte interactive alimentée par des emplacements provenant de sources publiques vérifiables.
+- Filtres pour coffres, secrets, ressources, boss et points d'intérêt.
+- Encyclopédie recherchable avec sources.
+- Guides détaillés de quêtes, personnages et combats.
+- Import/export et éventuellement synchronisation multi-appareils.
 
-## Principes
-- Pas de demande de mot de passe, cookie ou jeton de compte.
-- Pas de données de jeu inventées : les fiches et coordonnées devront être sourcées.
-- Progression conservée localement sur l'appareil dans cette première version.
-- Application non affiliée à Everstone Studio, NetEase ou Xbox.
+## Limites techniques importantes
+Cette application ne se connecte pas au compte NetEase/Xbox et ne lit pas la mémoire de la console. Le suivi automatique de la position du personnage en temps réel sur Xbox n'est pas implémenté et n'est pas garanti. La carte de jeu complète n'est pas encore intégrée. Les emplacements et stratégies ne seront publiés qu'après vérification de sources fiables.
 
-## Lancement local
-Ouvrir `index.html` dans un navigateur moderne. Pour tester le service worker/PWA, servir ce dossier en HTTP(S) (par exemple avec un serveur statique).
+Aucun mot de passe, cookie ou jeton de compte n'est demandé. La progression de cette version reste stockée localement sur l'appareil ; l'export JSON permet d'en conserver une copie.
 
-## Feuille de route
-1. Interface responsive et stockage local.
-2. Import de données de carte vérifiées et filtres par catégorie.
-3. Encyclopédie, quêtes, boss et builds alimentés par des sources vérifiables.
-4. Installation PWA et déploiement GitHub Pages.
-5. Étude séparée des possibilités de synchronisation Xbox, sans promettre de télémétrie inaccessible.
+## Déploiement
+Le workflow GitHub Actions « Where Winds Meet Companion — Deploy » valide les fichiers puis publie le dossier sur GitHub Pages. La publication nécessite que GitHub Pages soit autorisé pour le dépôt et que l'environnement `github-pages` soit disponible.
+
+Projet indépendant, non affilié à Everstone Studio, NetEase ou Microsoft/Xbox.
