@@ -56,6 +56,9 @@ assert.ok(schema.includes("grant execute on function public.save_companion_state
 assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser client must use the atomic SQL function");
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
+const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v6"'), "offline cache must be versioned after sync client changes");
+
 const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
 assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
 assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creation must avoid form property name collisions");
