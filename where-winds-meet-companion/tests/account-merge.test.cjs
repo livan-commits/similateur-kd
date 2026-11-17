@@ -55,4 +55,11 @@ assert.ok(schema.includes("grant execute on function public.save_companion_state
 assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser client must use the atomic SQL function");
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
+const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
+assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
+assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creation must avoid form property name collisions");
+assert.ok(appSource.includes('b.elements.namedItem("details").value'), "build details must be read from the named textarea");
+assert.equal(appSource.includes("q.name.value"), false, "quest form must not rely on ambiguous named access");
+assert.equal(appSource.includes("b.name.value"), false, "build form must not rely on ambiguous named access");
+
 console.log("Account sync merge tests passed.");
