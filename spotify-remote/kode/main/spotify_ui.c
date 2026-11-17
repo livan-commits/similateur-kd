@@ -167,52 +167,6 @@ static void touch_show(SpotifyUi const * const me, TouchEvt const * const te)
  * @param me The AO.
  * @param up true for brighter.
  */
-static void bright_step(SpotifyUi * const me, bool up)
-{
-    uint8_t pct = me->bright_pct;
-
-    if ( up )
-    {
-        if ( pct < (KODE_SYS_SCREEN_BRIGHT_MAX - SR_BRIGHT_STEP) )
-        {
-            pct += (uint8_t)SR_BRIGHT_STEP;
-        }
-        else
-        {
-            pct = (uint8_t)KODE_SYS_SCREEN_BRIGHT_MAX;
-        }
-    }
-    else
-    {
-        if ( pct > (KODE_SYS_SCREEN_BRIGHT_MIN + SR_BRIGHT_STEP) )
-        {
-            pct -= (uint8_t)SR_BRIGHT_STEP;
-        }
-        else
-        {
-            pct = (uint8_t)KODE_SYS_SCREEN_BRIGHT_MIN;
-        }
-    }
-
-    if ( kode_sys_screen_brightness(pct) == KODE_OK )
-    {
-        me->bright_pct = pct;
-        lv_label_set_text_fmt(me->bright, "brightness %u%%", (unsigned)pct);
-        KLOG_I(TAG, "brightness %u%%", (unsigned)pct);
-    }
-    else
-    {
-        KLOG_W(TAG, "AO_Display is busy; press again");
-    }
-}
-
-/**
- * @brief A tap on the glass: LVGL's click, on this AO's thread.
- *
- * The labels are not clickable, so a tap anywhere lands on the screen itself.
- *
- * @param e The click; its user data is the AO.
- */
 static void tap_cb(lv_event_t * e)
 {
     count_bump((SpotifyUi *)lv_event_get_user_data(e));
