@@ -9,7 +9,8 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 - Suivi manuel de catégories de découvertes.
 - Journal d'aventure.
 - Fiches personnelles de builds.
-- Notes de stratégie pour les boss.
+- Catalogue de 31 boss mondiaux jusqu'à la version 2.4, avec le boss de campagne Xiao Han distingué séparément et des liens vers les sources de roster.
+- Notes personnelles de stratégie pour les boss.
 - Export et import JSON de la progression, avec fusion des entrées lors de l'import.
 - Sauvegarde locale dans le navigateur.
 - Structure PWA et service worker pour l'utilisation hors ligne après première visite.
