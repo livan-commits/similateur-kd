@@ -32,7 +32,10 @@
     api.setData(combined);api.saveLocal();
     const write=await client.from("companion_state").upsert({user_id:user.id,schema_version:1,payload:combined},{onConflict:"user_id"});
     if(write.error){message("Erreur d’enregistrement : "+write.error.message);return;}
-    cloudReady=true;message("Synchronisation terminée. Tes données sont enregistrées sur ton compte.");
+    cloudReady=true;
+    const latest=api.getData();
+    if(JSON.stringify(latest)!==JSON.stringify(combined))window.wwmCloudSave(latest);
+    message("Synchronisation terminée. Tes données sont enregistrées sur ton compte.");
     const state=document.querySelector("#save-state");if(state)state.textContent="● Synchronisation activée";
   }
   window.wwmMergeData=merge;
