@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v16"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v17"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -84,6 +84,9 @@ assert.ok(vercel.headers.some(rule => rule.source === "/(.*)" && rule.headers.so
 
 
 const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
+assert.ok(appSource.includes("Le suivi automatique de la position du personnage n'est pas implémenté"), "map must clearly disclose that live player tracking is not implemented");
+assert.ok(appSource.includes("ne se connecte pas à ton compte NetEase"), "map must disclose that it does not connect to the game account");
+
 assert.ok(appSource.includes("id:(window.crypto&&window.crypto.randomUUID?window.crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
 assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
 assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
