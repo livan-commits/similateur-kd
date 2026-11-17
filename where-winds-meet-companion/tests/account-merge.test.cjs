@@ -92,6 +92,7 @@ assert.ok(appSource.includes("lettre de développeurs du 19 septembre"), "Taicu 
 assert.ok(appSource.includes("lettre de développeurs du 21 août"), "Inkpincer Scorpion and Cloudclutch Serpent tactics must retain their developer-letter provenance");
 assert.ok(appSource.includes("Compétence mystique Contortion"), "Hidden Mountain boss preparation must mention Contortion where required");
 assert.ok(appSource.includes("boss-strategy"), "sourced strategy details must render in expandable boss-card sections");
+assert.ok(appSource.includes("(b.strategy||'')+' '+(b.sourceLabel||'')"), "boss search must index strategy text and source labels");
 
 
 console.log("Account sync merge tests passed.");
