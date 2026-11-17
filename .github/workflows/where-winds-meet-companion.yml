@@ -24,7 +24,11 @@ jobs:
           test -s where-winds-meet-companion/app.js
           test -s where-winds-meet-companion/manifest.webmanifest
           test -s where-winds-meet-companion/service-worker.js
+          test -s where-winds-meet-companion/CONNEXIONS.md
+          ! grep -qi 'xbox' where-winds-meet-companion/index.html
+          ! grep -qi 'xbox' where-winds-meet-companion/app.js
           node --check where-winds-meet-companion/app.js
+          node --check where-winds-meet-companion/service-worker.js
       - name: Package companion website
         uses: actions/upload-artifact@v4
         with:
