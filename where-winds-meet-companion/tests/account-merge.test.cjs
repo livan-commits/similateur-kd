@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v21"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v22"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -197,6 +197,8 @@ assert.ok(appSource.includes("const codexCampaigns=["), "codex must include camp
 assert.ok(appSource.includes('kind:"Boss mondial"'), "codex must index the 31 world bosses");
 assert.ok(appSource.includes("<option>Région</option><option>Campagne</option><option>Boss mondial</option>"), "codex filters must include regions campaigns and world bosses");
 assert.ok(appSource.includes("34 Inner Ways nommés, 12 régions, 14 campagnes et 31 boss mondiaux"), "codex must display its documented catalogue coverage");
+assert.ok(appSource.includes("www.th.gl/fr/apps/where-winds-meet"), "codex must link the full external item and equipment database");
+
 
 assert.ok(!appSource.includes("Le catalogue est en cours de constitution"), "codex must not remain an empty placeholder");
 
