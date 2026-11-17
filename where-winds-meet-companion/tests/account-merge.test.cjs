@@ -168,7 +168,7 @@ assert.ok(appSource.includes("data-quest-add"), "region milestones must be addab
 assert.ok(appSource.includes("senseos.gg/wiki/where-winds-meet/regions/"), "region unlock checklist must link its source");
 
 assert.ok(appSource.includes("toLocaleLowerCase(\"fr\")"), "codex search must be case-insensitive for French text");
-assert.ok(appSource.includes("11 voies et leurs arts/passifs nommés"), "codex must disclose the scope and limits of its catalogue");
+assert.ok(appSource.includes("11 voies, 22 arts martiaux, 34 Inner Ways nommés"), "codex must disclose the scope and limits of its catalogue");
 assert.ok(appSource.includes("const codexRegions=["), "codex must include region unlock reference entries");
 assert.ok(appSource.includes("const codexCampaigns=["), "codex must include campaign entries through Version 2.4");
 assert.ok(appSource.includes('kind:"Boss mondial"'), "codex must index the 31 world bosses");
