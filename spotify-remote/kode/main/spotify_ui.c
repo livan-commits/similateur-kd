@@ -6,6 +6,8 @@
 #include "spotify_ui.h"
 #include "spotify_ble.h"
 
+#include <string.h>
+
 #include "kscreen.h"
 
 #define TAG "spotify_ui"
