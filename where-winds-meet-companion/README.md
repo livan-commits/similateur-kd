@@ -1,8 +1,8 @@
 # Where Winds Meet — Ultimate Companion
 
-Compagnon communautaire indépendant, en français, conçu comme deuxième écran pour les joueurs Xbox.
+Compagnon communautaire indépendant, en français, conçu comme deuxième écran universel pour les joueurs de **toutes les plateformes** : PC, PlayStation, Xbox, Android et iOS. L'application ne dépend d'aucune plateforme de jeu.
 
-## Fonctions présentes dans cette première version
+## Fonctions présentes
 - Tableau de bord de progression.
 - Carnet d'objectifs et cases à cocher.
 - Suivi manuel de catégories de découvertes.
@@ -13,19 +13,36 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 - Sauvegarde locale dans le navigateur.
 - Structure PWA et service worker pour l'utilisation hors ligne après première visite.
 
-## Fonctions prévues
-- Carte interactive alimentée par des emplacements provenant de sources publiques vérifiables.
-- Filtres pour coffres, secrets, ressources, boss et points d'intérêt.
-- Encyclopédie recherchable avec sources.
-- Guides détaillés de quêtes, personnages et combats.
-- Import/export et éventuellement synchronisation multi-appareils.
+## Direction du projet : compagnon connecté
+Le but n'est pas de rester une simple encyclopédie. Le projet vise :
+- un **compte compagnon** indépendant du compte Where Winds Meet ;
+- la synchronisation des données personnelles entre appareils ;
+- une carte interactive et des données de jeu sourcées ;
+- des connecteurs de suivi en direct lorsque la plateforme et les règles du jeu le permettent ;
+- des intégrations facultatives et séparées par plateforme, sans rendre les fonctions communes dépendantes d'un seul système.
 
-## Limites techniques importantes
-Cette application ne se connecte pas au compte NetEase/Xbox et ne lit pas la mémoire de la console. Le suivi automatique de la position du personnage en temps réel sur Xbox n'est pas implémenté et n'est pas garanti. La carte de jeu complète n'est pas encore intégrée. Les emplacements et stratégies ne seront publiés qu'après vérification de sources fiables.
+## État réel des connexions
+- **Compte compagnon :** pas encore implémenté. La version actuelle ne propose pas encore d'inscription ni de connexion.
+- **Synchronisation cloud :** pas encore implémentée ; les données sont actuellement stockées dans le navigateur.
+- **Connexion au compte NetEase / compte de plateforme :** aucune connexion n'est actuellement demandée ou effectuée. Aucun mot de passe, cookie ou jeton ne doit être communiqué au projet.
+- **Position du personnage en direct :** pas encore implémentée dans ce compagnon. Elle devra être évaluée séparément pour chaque plateforme et uniquement avec une méthode autorisée.
+- **Progression automatique des quêtes / objets :** pas encore implémentée.
 
-Aucun mot de passe, cookie ou jeton de compte n'est demandé. La progression de cette version reste stockée localement sur l'appareil ; l'export JSON permet d'en conserver une copie.
+## Architecture prévue pour les connexions
+Le compte du compagnon sera distinct du compte du jeu. Il servira uniquement à synchroniser les données créées dans le compagnon. Les données de jeu en direct passeront par des connecteurs indépendants, optionnels et limités aux capacités autorisées de chaque plateforme. Une indisponibilité d'un connecteur ne devra jamais bloquer l'application, la carte ou le suivi manuel.
+
+La conception détaillée, les niveaux de compatibilité et les contraintes sont documentés dans [CONNEXIONS.md](CONNEXIONS.md).
+
+## Sécurité et conformité
+Les conditions de NetEase interdisent notamment certains logiciels non autorisés qui modifient le jeu, contournent ses protections, extraient des informations par scraping ou automatisent les actions. Le projet n'intégrera pas de lecture mémoire, injection, modification du client, automatisation de commandes ou collecte de jetons de compte sans autorisation explicite. Toute méthode de suivi devra être vérifiée avant implémentation.
+
+## Sources de cartes
+- [Carte officielle Where Winds Meet](https://www.wherewindsmeetgame.com/map/)
+- [TH.GL — carte et base de données communautaires](https://wherewindsmeet.th.gl/)
+
+Les marqueurs communautaires seront identifiés comme tels et ne seront pas présentés comme des données officielles.
 
 ## Déploiement
-Le workflow GitHub Actions « Where Winds Meet Companion — Deploy » valide les fichiers puis publie le dossier sur GitHub Pages. La publication nécessite que GitHub Pages soit autorisé pour le dépôt et que l'environnement `github-pages` soit disponible.
+Le workflow GitHub Actions de ce compagnon valide les fichiers et prépare un artefact web. **Il ne déploie pas encore cette application sur une URL publique.** Le site Kode Dot publié sur GitHub Pages ne doit pas être remplacé par ce projet.
 
-Projet indépendant, non affilié à Everstone Studio, NetEase ou Microsoft/Xbox.
+Projet indépendant, non affilié à Everstone Studio ou NetEase.
