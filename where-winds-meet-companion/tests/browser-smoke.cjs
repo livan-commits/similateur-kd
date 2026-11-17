@@ -33,8 +33,9 @@ const { chromium } = require("playwright");
   assert.ok((await page.locator("#view").innerText()).includes("Connexion cloud à configurer"), "unconfigured cloud account should be explained clearly");
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  mobile.on("pageerror", error => errors.push(error.message));
   await mobile.goto("http://127.0.0.1:4173/index.html", { waitUntil: "domcontentloaded" });
-  await mobile.locator('#nav [data-view="codex"]').click();
+  await mobile.locator('#nav [data-view="codex"]').evaluate(element => element.click());
   const mobileWidth = await mobile.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
   assert.ok(mobileWidth.content <= mobileWidth.viewport + 1, "mobile layout should not introduce horizontal page overflow");
   await mobile.close();
