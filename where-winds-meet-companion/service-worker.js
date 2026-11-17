@@ -1,4 +1,4 @@
-const CACHE="wwm-companion-v6";
+const CACHE="wwm-companion-v7";
 const ASSETS=["./","./index.html","./styles.css","./app.js","./account.js","./supabase-config.js","./manifest.webmanifest"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("wwm-companion-")&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
