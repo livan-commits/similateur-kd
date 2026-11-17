@@ -80,7 +80,7 @@ assert.ok(vercel.headers.some(rule => rule.source === "/(.*)" && rule.headers.so
 
 
 const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
-assert.ok(appSource.includes("id:(crypto.randomUUID?crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
+assert.ok(appSource.includes("id:(window.crypto&&window.crypto.randomUUID?window.crypto.randomUUID()"), "new builds must receive stable IDs for cross-device merging");
 assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
 assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
 assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creation must avoid form property name collisions");
