@@ -8,3 +8,4 @@
 
 #codex-results{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}#codex-results .codex-entry{min-width:0}#codex-results .codex-entry h3{font:600 15px Cinzel,serif;margin:10px 0}#codex-results .codex-entry p{line-height:1.65}#codex-results .codex-entry a{color:var(--gold);font-size:11px}.codex-entry .section-head{margin:0;align-items:flex-start;gap:8px;flex-wrap:wrap}#build-inner{min-height:110px}
 #install-btn[hidden]{display:none}#install-btn{color:var(--gold)}
+.progress{height:5px;background:#0c140f;border-radius:6px;overflow:hidden;margin:9px 0}.progress>span{display:block;height:100%;background:var(--gold);transition:width .2s ease}
