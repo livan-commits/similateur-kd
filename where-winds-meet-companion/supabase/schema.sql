@@ -15,7 +15,7 @@ create table public.companion_state (
 
 alter table public.companion_state enable row level security;
 
-revoke all on table public.companion_state from anon;
+revoke all on table public.companion_state from anon, authenticated;
 grant select, insert, update, delete on table public.companion_state to authenticated;
 
 create policy "Users can read their own companion state"
