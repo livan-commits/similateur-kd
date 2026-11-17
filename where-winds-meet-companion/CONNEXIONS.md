@@ -34,7 +34,8 @@ Une liaison au compte Where Winds Meet n'a d'intérêt que si NetEase fournit un
 TH.GL indique que son application compagnon Windows (Windows 10/11) affiche la position et l'orientation du joueur sur la carte. Sa fiche précise que la détection de Where Winds Meet est actuellement prise en charge via **Steam**. Le site web de TH.GL fonctionne sur tous les appareils, mais ne fournit pas à lui seul la superposition ni le suivi de position. TH.GL décrit également un partage de position entre utilisateurs par Peer Link. Ces informations démontrent une solution communautaire dans une configuration précise, **pas** une API universelle, une autorisation officielle de NetEase, ni un droit de réutiliser son code ou son protocole.
 
 - [Carte Where Winds Meet sur TH.GL](https://wherewindsmeet.th.gl/)
-- [Fiche TH.GL : Companion App Windows et compatibilité Steam](https://www.th.gl/fr/apps/where-winds-meet)\n- [FAQ TH.GL : suivi de la position des amis via Peer Link](https://www.th.gl/faq/see-friends-on-map)
+- [Fiche TH.GL : Companion App Windows et compatibilité Steam](https://www.th.gl/fr/apps/where-winds-meet)
+- [FAQ TH.GL : suivi de la position des amis via Peer Link](https://www.th.gl/faq/see-friends-on-map)
 - [TH.GL : état du suivi en direct de Where Winds Meet](https://www.th.gl/suggestions-issues/1558792781974081546)
 
 ## 3. Architecture cible
@@ -83,6 +84,12 @@ Les [conditions d'utilisation de Where Winds Meet](https://www.wherewindsmeetgam
 
 En conséquence, ce projet n'utilisera pas de lecture mémoire, injection, modification du client, contournement anti-triche, automatisation des commandes ni récupération de jetons de session. Une technique de suivi ne sera retenue qu'après vérification de sa compatibilité avec les règles applicables. En cas de doute, la fonction restera manuelle ou sera désactivée.
 
-## 6. Carte intégrée\n\nLa vue Carte intègre les cartes TH.GL via leur URL officielle `/embed/maps/` documentée par le fournisseur. Les cartes proposées sont Central Plain, Hexi et Transdust Ruins. Le chargement est volontaire : tant que le joueur ne clique pas sur « Afficher la carte », aucun iframe TH.GL n'est créé. Le crédit et le lien vers la carte complète sont conservés sous l'iframe, conformément aux conditions d'intégration du fournisseur. Les marqueurs, couches, filtres et données restent hébergés et maintenus par TH.GL ; ils ne sont ni copiés ni présentés comme des données propres au compagnon. La carte officielle NetEase reste un lien externe car l'intégration iframe n'est pas retenue.\n\nSources techniques : [documentation d'intégration TH.GL](https://www.th.gl/developers) et [carte Where Winds Meet TH.GL](https://wherewindsmeet.th.gl/).\n\n## 7. État actuel
+## 6. Carte intégrée
+
+La vue Carte intègre les cartes TH.GL via leur URL officielle `/embed/maps/` documentée par le fournisseur. Les cartes proposées sont Central Plain, Hexi et Transdust Ruins. Le chargement est volontaire : tant que le joueur ne clique pas sur « Afficher la carte », aucun iframe TH.GL n'est créé. Le crédit et le lien vers la carte complète sont conservés sous l'iframe, conformément aux conditions d'intégration du fournisseur. Les marqueurs, couches, filtres et données restent hébergés et maintenus par TH.GL ; ils ne sont ni copiés ni présentés comme des données propres au compagnon. La carte officielle NetEase reste un lien externe car l'intégration iframe n'est pas retenue.
+
+Sources techniques : [documentation d'intégration TH.GL](https://www.th.gl/developers) et [carte Where Winds Meet TH.GL](https://wherewindsmeet.th.gl/).
+
+## 7. État actuel
 
 À la date de cette version, le compagnon possède une carte TH.GL intégrée avec chargement à la demande ; la progression propre au compagnon reste indépendante des cases cochées chez TH.GL. Le compagnon ne possède pas encore de projet Supabase configuré, de compte utilisateur actif, de synchronisation cloud réellement opérationnelle, de liaison NetEase ni de suivi automatique de position. Le code du client cloud et le schéma SQL sont préparés, mais le schéma n'a pas été appliqué ni testé sur une instance Supabase. Les données continuent donc d'être enregistrées dans le navigateur. La fusion actuelle conserve les entrées distinctes et donne priorité à l'état local en cas de doublon ; elle ne constitue pas encore une résolution complète des conflits entre modifications simultanées sur plusieurs appareils. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
