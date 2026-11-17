@@ -5,7 +5,8 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 ## Fonctions présentes
 - Tableau de bord de progression.
 - Carnet d'objectifs et cases à cocher.
-- Carte TH.GL intégrée au compagnon, avec sélection des cartes Plaine centrale, Hexi et Ruines Transdust ; chargement à la demande et lien de crédit conservé.\n- Suivi manuel de catégories de découvertes.
+- Carte TH.GL intégrée au compagnon, avec sélection des cartes Plaine centrale, Hexi et Ruines Transdust ; chargement à la demande et lien de crédit conservé.
+- Suivi manuel de catégories de découvertes.
 - Journal d'aventure.
 - Fiches personnelles de builds.
 - Notes de stratégie pour les boss.
@@ -36,9 +37,12 @@ La conception détaillée, les niveaux de compatibilité et les contraintes sont
 ## Sécurité et conformité
 Les conditions de NetEase interdisent notamment certains logiciels non autorisés qui modifient le jeu, contournent ses protections, extraient des informations par scraping ou automatisent les actions. Le projet n'intégrera pas de lecture mémoire, injection, modification du client, automatisation de commandes ou collecte de jetons de compte sans autorisation explicite. Toute méthode de suivi devra être vérifiée avant implémentation.
 
-## Sources de cartes
-- [Carte officielle Where Winds Meet](https://www.wherewindsmeetgame.com/map/)
+## Carte interactive
+La carte TH.GL est affichée dans le compagnon via son mécanisme officiel d'intégration iframe. Le chargement est déclenché par l'utilisateur afin de ne contacter le fournisseur tiers qu'au moment où il souhaite consulter la carte. La carte intégrée, ses marqueurs et ses filtres restent fournis et gérés par TH.GL ; les cases de progression de ce compagnon ne se synchronisent pas avec les découvertes cochées chez ce fournisseur.
+
+- [Carte officielle Where Winds Meet](https://www.wherewindsmeetgame.com/map/) (ouverture séparée ; intégration iframe non retenue)
 - [TH.GL — carte et base de données communautaires](https://wherewindsmeet.th.gl/)
+- [Documentation d'intégration TH.GL](https://www.th.gl/developers)
 - [Where Guilds Meet — atlas communautaire, quêtes et itinéraires](https://www.whereguildsmeet.org/map)
 
 Les marqueurs communautaires seront identifiés comme tels et ne seront pas présentés comme des données officielles.
