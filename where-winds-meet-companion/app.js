@@ -169,5 +169,10 @@ document.querySelector("#import-file").onchange=async e=>{
   e.target.value="";
 };
 window.wwmDataApi={getData:()=>data,setData:value=>{data=value;},saveLocal:()=>{localStorage.setItem(KEY,JSON.stringify(data));render(currentView);},render:render,getView:()=>currentView};
+let installPromptEvent=null;
+const installButton=document.querySelector("#install-btn");
+window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPromptEvent=event;if(installButton)installButton.hidden=false;});
+if(installButton)installButton.onclick=async()=>{if(!installPromptEvent)return;const promptEvent=installPromptEvent;installPromptEvent=null;try{await promptEvent.prompt();const choice=await promptEvent.userChoice;if(choice&&choice.outcome==="accepted"){installButton.textContent="Installé";}else{installButton.hidden=true;}}catch(error){installButton.hidden=true;}};
+window.addEventListener("appinstalled",()=>{if(installButton){installButton.textContent="Installé";installButton.hidden=false;}});
 render();
 if("serviceWorker" in navigator && location.protocol!=="file:"){navigator.serviceWorker.register("./service-worker.js").catch(()=>{});}
