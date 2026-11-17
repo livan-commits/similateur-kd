@@ -22,7 +22,7 @@ Le but n'est pas de rester une simple encyclopédie. Le projet vise :
 - des intégrations facultatives et séparées par plateforme, sans rendre les fonctions communes dépendantes d'un seul système.
 
 ## État réel des connexions
-- **Compte compagnon :** pas encore implémenté. La version actuelle ne propose pas encore d'inscription ni de connexion.
+- **Compte compagnon :** interface d'inscription, connexion et déconnexion ajoutée ; activation réelle en attente de la configuration Supabase.
 - **Synchronisation cloud :** pas encore implémentée ; le schéma Supabase est préparé, mais aucun projet backend n'est encore configuré. Les données sont actuellement stockées dans le navigateur.
 - **Connexion au compte NetEase / compte de plateforme :** aucune connexion n'est actuellement demandée ou effectuée. Aucun mot de passe, cookie ou jeton ne doit être communiqué au projet.
 - **Position du personnage en direct :** pas encore implémentée dans ce compagnon. Elle devra être évaluée séparément pour chaque plateforme et uniquement avec une méthode autorisée.
