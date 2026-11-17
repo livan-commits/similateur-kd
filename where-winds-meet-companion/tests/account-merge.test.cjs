@@ -73,6 +73,8 @@ assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creat
 assert.ok(appSource.includes('b.elements.namedItem("details").value'), "build details must be read from the named textarea");
 assert.equal(appSource.includes("q.name.value"), false, "quest form must not rely on ambiguous named access");
 assert.equal(appSource.includes("b.name.value"), false, "build form must not rely on ambiguous named access");
+const bossBlock = appSource.split("const bossData=[")[1].split("];")[0];
+assert.equal((bossBlock.match(/\{name:/g)||[]).length, 31, "boss catalogue must contain exactly 31 world-boss records");
 assert.ok(appSource.includes("31 boss mondiaux"), "boss catalogue must state the world-boss count separately");
 assert.ok(appSource.includes("Xiao Han"), "Hutuo campaign boss must be documented separately from world bosses");
 assert.ok(appSource.includes("wherewindsmeet.org/guides/hutuo"), "Hutuo roster source must be linked from the boss view");
