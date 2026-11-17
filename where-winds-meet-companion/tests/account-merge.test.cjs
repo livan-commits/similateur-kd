@@ -79,6 +79,12 @@ assert.ok(appSource.includes("31 boss mondiaux"), "boss catalogue must state the
 assert.ok(appSource.includes("Xiao Han"), "Hutuo campaign boss must be documented separately from world bosses");
 assert.ok(appSource.includes("wherewindsmeet.org/guides/hutuo"), "Hutuo roster source must be linked from the boss view");
 assert.ok(appSource.includes("wherewindsmeetgame.org/guides/where-winds-meet-bosses"), "boss roster source must be linked from the boss view");
+assert.ok(appSource.includes("Conseil de combat sourcé"), "boss cards must expose sourced combat guidance");
+assert.ok(appSource.includes("allthings.how/how-to-beat-puppeteer-sheng-wu"), "Sheng Wu strategy source must be linked");
+assert.ok(appSource.includes("gamemarket.gg/news/where-winds-meet/where-winds-meet-bosses"), "Hutuo boss strategy source must be linked");
+assert.ok(appSource.includes("Les consignes concernent cette épreuve d’équipe, pas nécessairement le boss en monde ouvert"), "trial-only mechanics must not be presented as open-world mechanics");
+assert.ok(appSource.includes("dont les mécaniques diffèrent du boss mondial"), "Centipede trial mechanics must be clearly scoped");
+assert.ok(appSource.includes("lettre de développeurs du 19 septembre"), "Taicu and Goshawk tactics must retain their developer-letter provenance");
 
 
 console.log("Account sync merge tests passed.");
