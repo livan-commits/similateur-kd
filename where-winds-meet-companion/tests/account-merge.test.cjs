@@ -84,6 +84,14 @@ assert.ok(appSource.includes("allthings.how/where-winds-meet-sleeping-daoist-bos
 assert.ok(appSource.includes("dévie-les pour vider sa jauge de Qi"), "Sleeping Daoist strategy must include the projectile-deflection loop");
 assert.ok(appSource.includes("Évite de rester derrière l’âne"), "Sleeping Daoist strategy must warn about the rear donkey kick");
 assert.ok(appSource.includes("allthings.how/how-to-beat-puppeteer-sheng-wu"), "Sheng Wu strategy source must be linked");
+assert.ok(appSource.includes("wherewindsmeethandbook.com/bosses/earth-fiend-deity"), "Earth Fiend Deity strategy source must be linked");
+assert.ok(appSource.includes("Cloud Steps pour le tourbillon"), "Earth Fiend Deity strategy must reserve Cloud Steps for the whirlwind interrupt");
+assert.ok(appSource.includes("allthings.how/snake-doctor-world-boss-guide-where-winds-meet"), "Snake Doctor strategy source must be linked");
+assert.ok(appSource.includes("attaque dorée qui projette trois serpents"), "Snake Doctor strategy must warn that the gold snake fan cannot be parried");
+assert.ok(appSource.includes("allthings.how/yi-dao-in-where-winds-meet-how-the-killerblade-fight-works"), "Yi Dao strategy source must be linked");
+assert.ok(appSource.includes("Celestial Seize peut interrompre"), "Yi Dao strategy must mention the sword-disarm interrupt");
+assert.ok(appSource.includes("npa-www-procd-a0f2e2h7hfdkfjgs.eastus-01.azurewebsites.net/where-winds-meet-guide/tips-guides/all-bosses-and-how-to-beat-them"), "Curtaincall strategy source must be linked");
+
 assert.ok(appSource.includes("gamemarket.gg/news/where-winds-meet/where-winds-meet-bosses"), "Hutuo boss strategy source must be linked");
 assert.ok(appSource.includes("Aperçu pré-lancement Hutuo"), "Hutuo combat advice must be labelled as pre-launch guidance pending in-game confirmation");
 assert.ok(appSource.includes("Ces consignes concernent cette épreuve d’équipe, pas nécessairement le boss en monde ouvert"), "trial-only mechanics must not be presented as open-world mechanics");
