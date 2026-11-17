@@ -9,7 +9,7 @@ Compagnon communautaire indépendant, en français, conçu comme deuxième écra
 - Journal d'aventure.
 - Fiches personnelles de builds.
 - Notes de stratégie pour les boss.
-- Export JSON de la progression.
+- Export et import JSON de la progression, avec fusion des entrées lors de l'import.
 - Sauvegarde locale dans le navigateur.
 - Structure PWA et service worker pour l'utilisation hors ligne après première visite.
 
