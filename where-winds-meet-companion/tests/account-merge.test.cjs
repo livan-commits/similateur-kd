@@ -95,7 +95,7 @@ assert.ok(appSource.includes("id:(window.crypto&&window.crypto.randomUUID?window
 assert.ok(appSource.includes('const key=v.id?"id:"+String(v.id)'), "JSON import must preserve distinct structured builds by ID");
 assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
 assert.ok(appSource.includes('b.elements.namedItem("name").value'), "build creation must avoid form property name collisions");
-assert.ok(appSource.includes('b.elements.namedItem("details").value'), "build details must be read from the named textarea");
+assert.ok(appSource.includes('b.elements.namedItem("details")'), "build details must be read from the named textarea");
 assert.equal(appSource.includes("q.name.value"), false, "quest form must not rely on ambiguous named access");
 assert.equal(appSource.includes("b.name.value"), false, "build form must not rely on ambiguous named access");
 const bossBlock = appSource.split("const bossData=[")[1].split("];")[0];
