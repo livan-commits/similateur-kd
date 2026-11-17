@@ -89,6 +89,16 @@ assert.ok(appSource.includes("Cloud Steps pour le tourbillon"), "Earth Fiend Dei
 assert.ok(appSource.includes("allthings.how/snake-doctor-world-boss-guide-where-winds-meet"), "Snake Doctor strategy source must be linked");
 assert.ok(appSource.includes("attaque dorée qui projette trois serpents"), "Snake Doctor strategy must warn that the gold snake fan cannot be parried");
 assert.ok(appSource.includes("allthings.how/yi-dao-in-where-winds-meet-how-the-killerblade-fight-works"), "Yi Dao strategy source must be linked");
+
+assert.ok(appSource.includes("PlayerAuctions (19 novembre 2025)"), "Kaifeng boss strategies must identify their source and date");
+assert.ok(appSource.includes("rencontre nocturne"), "Wolf Maiden strategy must document its night-only appearance");
+assert.ok(appSource.includes("attaques de zone peuvent se chevaucher"), "Twin Lions strategy must address overlapping area attacks");
+assert.ok(appSource.includes("Ephemeral Blight"), "Ghost Master strategy must document the prerequisite quest chain");
+assert.ok(appSource.includes("Meridian Touch peut dissiper ses projectiles"), "Ghost Master strategy must document the projectile counter");
+assert.ok(appSource.includes("brise la garde ou l’endurance"), "Nameless General strategy must address phase-one guard break");
+assert.ok(appSource.includes("trébuchement ou sa courte pause"), "Drunk Martial Artist strategy must explain its punish window");
+assert.ok(appSource.includes("Coffin Keeper Lord"), "Coffin Master strategy must flag the source's historical name");
+
 assert.ok(appSource.includes("Celestial Seize peut interrompre"), "Yi Dao strategy must mention the sword-disarm interrupt");
 assert.ok(appSource.includes("npa-www-procd-a0f2e2h7hfdkfjgs.eastus-01.azurewebsites.net/where-winds-meet-guide/tips-guides/all-bosses-and-how-to-beat-them"), "Curtaincall strategy source must be linked");
 
