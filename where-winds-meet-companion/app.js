@@ -72,7 +72,8 @@ document.querySelector("#import-file").onchange=async e=>{
     if(incoming.quests!==undefined&&!Array.isArray(incoming.quests))throw new Error("Le champ quests doit être une liste.");
     if(incoming.journal!==undefined&&!Array.isArray(incoming.journal))throw new Error("Le champ journal doit être une liste.");
     if(incoming.builds!==undefined&&!Array.isArray(incoming.builds))throw new Error("Le champ builds doit être une liste.");
-    if(incoming.mapNotes!==undefined&&!Array.isArray(incoming.mapNotes))throw new Error("Le champ mapNotes doit être une liste.");\n    if(incoming.deletedMapNoteIds!==undefined&&!Array.isArray(incoming.deletedMapNoteIds))throw new Error("Le champ deletedMapNoteIds doit être une liste.");
+    if(incoming.mapNotes!==undefined&&!Array.isArray(incoming.mapNotes))throw new Error("Le champ mapNotes doit être une liste.");
+    if(incoming.deletedMapNoteIds!==undefined&&!Array.isArray(incoming.deletedMapNoteIds))throw new Error("Le champ deletedMapNoteIds doit être une liste.");
     if(incoming.checks!==undefined&&(!incoming.checks||typeof incoming.checks!=="object"||Array.isArray(incoming.checks)))throw new Error("Le champ checks doit être un objet.");
     const quests=new Map();
     (incoming.quests||[]).concat(data.quests||[]).forEach(q=>{if(q&&q.name){const key=String(q.name).trim().toLowerCase();if(key)quests.set(key,q);}});
