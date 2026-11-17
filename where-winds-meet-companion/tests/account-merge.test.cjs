@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v23"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v24"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
