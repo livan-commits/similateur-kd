@@ -114,6 +114,10 @@ static void count_bump(SpotifyUi * const me)
  */
 static void clock_show(SpotifyUi const * const me)
 {
+    char media_state[180];
+    if (spotify_ble_get_phone_state(media_state, sizeof(media_state))) {
+        lv_label_set_text(me->touch, media_state);
+    }
     /* The weekday's short name, indexed by kode_sys_time_t's weekday. */
     static const char * const SR_DAYS[SR_WEEK_DAYS] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -240,8 +244,10 @@ static void ui_build(SpotifyUi * const me)
                    lv_color_white(), SR_TITLE_DY);
     me->count = line_new("READY", &lv_font_montserrat_48,
                          lv_palette_main(LV_PALETTE_LIGHT_BLUE), SR_COUNT_DY);
-    me->touch = line_new("Connect phone with Android app", &lv_font_montserrat_14,
+    me->touch = line_new("Waiting for Android companion", &lv_font_montserrat_14,
                          lv_color_white(), SR_TOUCH_DY);
+    lv_obj_set_width(me->touch, 360);
+    lv_label_set_long_mode(me->touch, LV_LABEL_LONG_DOT);
     me->bright = line_new("", &lv_font_montserrat_14, lv_color_white(),
                           SR_BRIGHT_DY);
     lv_label_set_text_fmt(me->bright, "brightness %u%%", (unsigned)me->bright_pct);
