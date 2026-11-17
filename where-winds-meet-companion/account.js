@@ -35,6 +35,7 @@
     cloudReady=true;message("Synchronisation terminée. Tes données sont enregistrées sur ton compte.");
     const state=document.querySelector("#save-state");if(state)state.textContent="● Synchronisation activée";
   }
+  window.wwmMergeData=merge;
   window.wwmAccountView=view;
   window.wwmAccountBind=function(root){
     if(!client)return;
