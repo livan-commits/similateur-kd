@@ -99,6 +99,20 @@ assert.ok(appSource.includes("brisent la garde ou l’endurance"), "Nameless Gen
 assert.ok(appSource.includes("trébuchement ou sa courte pause"), "Drunk Martial Artist strategy must explain its punish window");
 assert.ok(appSource.includes("Coffin Keeper Lord"), "Coffin Master strategy must flag the source's historical name");
 
+assert.ok(appSource.includes("allthings.how/feng-ruzhi-in-where-winds-meet-location-mechanics-and-rewards"), "Feng Ruzhi strategy must link to the Silk Ball guide");
+assert.ok(appSource.includes("boule de soie"), "Feng Ruzhi strategy must explain the Silk Ball fail condition");
+assert.ok(appSource.includes("allthings.how/where-winds-meet-wandering-ark-boss-fight-made-simple"), "Wandering Ark strategy must link to its phase guide");
+assert.ok(appSource.includes("quatre branches desséchées de lune"), "Wandering Ark strategy must target the four phase-one weak points");
+assert.ok(appSource.includes("reddit.com/r/WhereWindsMeet/comments/1sk6qif/moongazing-maiden"), "Moongazing Maiden strategy must identify its community source");
+assert.ok(appSource.includes("Cloud Leap"), "Moongazing Maiden strategy must describe the phase transition safe-zone action");
+assert.ok(appSource.includes("cheatbook.de/files/wherewindsmeet.htm"), "Everdeer and Pocketrupt Circus strategy source must be linked");
+assert.ok(appSource.includes("Deer's Blessing"), "Everdeer strategy must explain the green-orb healing mechanic");
+assert.ok(appSource.includes("attaques de fumée"), "Pocketrupt Circus strategy must distinguish the two enemies");
+assert.ok(appSource.includes("allthings.how/where-winds-meet-cat-emperor-how-to-spawn-and-beat-the-boss"), "Cat Emperor strategy must link to its guide");
+assert.ok(appSource.includes("ne peut pas être déséquilibré"), "Cat Emperor strategy must warn that it cannot be staggered");
+assert.ok(appSource.includes("Li Jingwei"), "Cat Emperor record must preserve the fishing encounter trigger");
+
+
 assert.ok(appSource.includes("Celestial Seize peut interrompre"), "Yi Dao strategy must mention the sword-disarm interrupt");
 assert.ok(appSource.includes("npa-www-procd-a0f2e2h7hfdkfjgs.eastus-01.azurewebsites.net/where-winds-meet-guide/tips-guides/all-bosses-and-how-to-beat-them"), "Curtaincall strategy source must be linked");
 
