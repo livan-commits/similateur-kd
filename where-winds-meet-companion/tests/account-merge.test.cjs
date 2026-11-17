@@ -44,4 +44,5 @@ assert.equal(conflictMerged.checks.Coffres,false,"the newest timestamp must win 
 assert.equal(conflictMerged.quests[0].done,false,"the newest timestamp must win for quest completion");
 assert.deepEqual(Array.from(conflictMerged.mapNotes, n=>n.id),["live-note"],"deleted map notes must not be resurrected");
 assert.deepEqual(Array.from(conflictMerged.deletedMapNoteIds),["deleted-note"],"map note tombstones must survive merging");
-\nconsole.log("Account sync merge tests passed.");
+
+console.log("Account sync merge tests passed.");
