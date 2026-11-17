@@ -1,1 +1,18 @@
-{"name":"Where Winds Meet — Ultimate Companion","short_name":"WWM Companion","lang":"fr","start_url":"./index.html","display":"standalone","background_color":"#0d1411","theme_color":"#101713","description":"Compagnon communautaire non officiel pour Where Winds Meet."}
+{
+  "name": "Where Winds Meet — Ultimate Companion",
+  "short_name": "WWM Companion",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d1411",
+  "theme_color": "#101713",
+  "description": "Compagnon communautaire non officiel pour Where Winds Meet.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
