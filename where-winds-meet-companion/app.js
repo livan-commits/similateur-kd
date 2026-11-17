@@ -19,3 +19,4 @@ function bind(){view.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>rend
 document.querySelector("#nav").onclick=e=>{const b=e.target.closest("[data-view]");if(b)render(b.dataset.view);};
 document.querySelector("#export-btn").onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="where-winds-meet-progression.json";a.click();URL.revokeObjectURL(a.href);};
 render();
+if("serviceWorker" in navigator && location.protocol!=="file:"){navigator.serviceWorker.register("./service-worker.js").catch(()=>{});}
