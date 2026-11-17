@@ -76,6 +76,10 @@ const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
 assert.ok(serviceWorker.includes('"./icon.svg"'), "offline cache must include the PWA icon");
 assert.ok(fs.existsSync("where-winds-meet-companion/icon.svg"), "PWA icon asset must exist");
+const vercel = JSON.parse(fs.readFileSync("where-winds-meet-companion/vercel.json", "utf8"));
+assert.ok(vercel.headers.some(rule => rule.source === "/service-worker.js"), "Vercel must prevent stale service-worker caching");
+assert.ok(vercel.headers.some(rule => rule.source === "/(.*)" && rule.headers.some(h => h.key === "X-Content-Type-Options")), "Vercel must apply basic security headers");
+
 
 const appSource = fs.readFileSync("where-winds-meet-companion/app.js", "utf8");
 assert.ok(appSource.includes('q.elements.namedItem("name").value'), "quest creation must read the named input explicitly");
