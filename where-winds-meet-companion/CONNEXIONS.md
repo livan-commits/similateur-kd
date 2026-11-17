@@ -13,7 +13,7 @@ Un compte propre à ce projet permettra de retrouver les mêmes données sur le 
 - journal personnel ;
 - préférences de carte et filtres.
 
-Ce compte ne sera **pas** le compte NetEase, Steam, PlayStation Network, Xbox ou Apple. Il ne demandera jamais le mot de passe du jeu. Le fournisseur d'authentification et le backend seront choisis avant de mettre en production l'inscription, la connexion, la récupération de compte et la synchronisation.
+Ce compte ne sera **pas** le compte NetEase, Steam, PlayStation Network, Xbox ou Apple. Il ne demandera jamais le mot de passe du jeu. **Supabase est retenu comme backend cible** pour Supabase Auth et PostgreSQL. Le schéma SQL initial avec Row Level Security est préparé dans `supabase/schema.sql`. Le projet Supabase n'est pas encore créé/configuré ; l'inscription, la connexion, la récupération de compte et la synchronisation ne sont donc pas actives.
 
 ### Connexion au compte du jeu — facultative et non disponible à ce stade
 
@@ -68,7 +68,9 @@ Les valeurs `null` sont intentionnelles : aucune coordonnée ne doit être inven
 
 - [x] Retirer les références Xbox exclusives et rendre le projet multiplateforme.
 - [x] Définir la séparation entre compte compagnon et compte du jeu.
-- [ ] Choisir et configurer le backend d'authentification et de synchronisation.
+- [x] Choisir le backend cible : Supabase Auth + PostgreSQL.
+- [x] Préparer le schéma SQL initial avec RLS.
+- [ ] Créer/configurer le projet Supabase et ses clés publiques.
 - [ ] Implémenter inscription, connexion, déconnexion et récupération de compte.
 - [ ] Migrer les données locales vers un modèle synchronisable avec fusion hors ligne.
 - [ ] Évaluer un connecteur Windows en respectant les règles du jeu.
@@ -83,4 +85,4 @@ En conséquence, ce projet n'utilisera pas de lecture mémoire, injection, modif
 
 ## 6. État actuel
 
-À la date de cette version, le compagnon ne possède pas encore de serveur, de compte utilisateur, de synchronisation cloud, de liaison NetEase ni de suivi automatique de position. Le code existant conserve les données dans le stockage local du navigateur. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
+À la date de cette version, le compagnon ne possède pas encore de projet Supabase configuré, de compte utilisateur actif, de synchronisation cloud, de liaison NetEase ni de suivi automatique de position. Le schéma SQL est préparé, mais n'a pas encore été appliqué ni testé sur une instance Supabase. Le code existant conserve les données dans le stockage local du navigateur. Ce document est une spécification de développement, pas une promesse de fonctions déjà actives.
