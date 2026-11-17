@@ -1,6 +1,6 @@
 (function(){
   const cfg=window.WWM_SUPABASE_CONFIG||{};
-  let client=null,user=null,cloudReady=false,recoveryMode=false,syncInFlight=false,queue=Promise.resolve();
+  let client=null,user=null,cloudReady=false,recoveryMode=false,syncInFlight=false,cloudRevision=null,queue=Promise.resolve();
   if(window.supabase&&window.supabase.createClient&&cfg.url&&cfg.anonKey&&!cfg.url.includes("YOUR_")&&!cfg.anonKey.includes("YOUR_")){
     client=window.supabase.createClient(cfg.url,cfg.anonKey);
   }
@@ -28,9 +28,34 @@
     (remote.mapNotes||[]).concat(local.mapNotes||[]).forEach(function(n){if(n&&n.id&&!deleted.has(String(n.id))){const id=String(n.id),prev=mapNotes.get(id);mapNotes.set(id,prev?newer(n,prev):n);}});
     return Object.assign({},remote,local,{quests:Array.from(quests.values()),journal:Array.from(journal.values()),checks:checks,checkUpdatedAt:checkUpdatedAt,builds:Array.from(builds.values()),mapNotes:Array.from(mapNotes.values()),deletedMapNoteIds:Array.from(deleted),mapRegion:local.mapRegion||remote.mapRegion||"central"});
   }
+  async function saveSnapshot(payload,syncUserId){
+    let snapshot=payload;
+    const api=window.wwmDataApi;
+    for(let attempt=0;attempt<4;attempt++){
+      if(!user||user.id!==syncUserId)throw new Error("La session a changé. Reconnecte-toi puis relance la synchronisation.");
+      const write=await client.rpc("save_companion_state",{
+        p_expected_revision:cloudRevision,
+        p_schema_version:1,
+        p_payload:snapshot
+      });
+      if(write.error)throw new Error("Erreur d’enregistrement sécurisé : "+write.error.message+". Vérifie que la dernière version de supabase/schema.sql a été appliquée.");
+      const result=Array.isArray(write.data)?write.data[0]:write.data;
+      if(result&&result.saved){
+        cloudRevision=Number(result.revision);
+        return snapshot;
+      }
+      const read=await client.from("companion_state").select("payload,revision").eq("user_id",syncUserId).maybeSingle();
+      if(read.error)throw new Error("Erreur de relecture après conflit : "+read.error.message);
+      cloudRevision=read.data?Number(read.data.revision):null;
+      snapshot=merge(api.getData(),read.data&&read.data.payload||{});
+      api.setData(snapshot);
+      api.saveLocal();
+    }
+    throw new Error("Les données ont changé plusieurs fois sur un autre appareil. Relance la synchronisation pour éviter d’écraser une modification.");
+  }
   async function sync(){
     if(!client||!user||syncInFlight)return;
-    syncInFlight=true;cloudReady=false;
+    syncInFlight=true;cloudReady=false;cloudRevision=null;
     const syncUserId=user.id;
     try{
       message("Synchronisation en cours…");
@@ -39,12 +64,12 @@
       await queue;
       if(!user||user.id!==syncUserId)throw new Error("La session a changé. Reconnecte-toi puis relance la synchronisation.");
       const api=window.wwmDataApi;const local=api.getData();
-      const read=await client.from("companion_state").select("payload").eq("user_id",syncUserId).maybeSingle();
+      const read=await client.from("companion_state").select("payload,revision").eq("user_id",syncUserId).maybeSingle();
       if(read.error)throw new Error("Erreur de lecture : "+read.error.message);
-      const combined=merge(local,read.data&&read.data.payload||{});
+      cloudRevision=read.data?Number(read.data.revision):null;
+      let combined=merge(local,read.data&&read.data.payload||{});
       api.setData(combined);api.saveLocal();
-      const write=await client.from("companion_state").upsert({user_id:syncUserId,schema_version:1,payload:combined},{onConflict:"user_id"});
-      if(write.error)throw new Error("Erreur d’enregistrement : "+write.error.message);
+      combined=await saveSnapshot(combined,syncUserId);
       if(!user||user.id!==syncUserId)throw new Error("La session a changé pendant la synchronisation.");
       cloudReady=true;
       const latest=api.getData();
@@ -75,14 +100,18 @@
     };
     const forgot=root.querySelector("#forgot-password");if(forgot)forgot.onclick=async function(){const form=root.querySelector("#auth-form");const email=form.email.value.trim();if(!email){message("Saisis ton adresse e-mail avant de demander un lien de réinitialisation.");return;}const result=await client.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});message(result.error?"Erreur : "+result.error.message:"Si un compte correspond à cette adresse, un e-mail de réinitialisation va être envoyé.");};
     const syncButton=root.querySelector("#sync-now");if(syncButton)syncButton.onclick=function(){sync().catch(function(e){message("Erreur de synchronisation : "+e.message);});};
-    const out=root.querySelector("#sign-out");if(out)out.onclick=async function(){const result=await client.auth.signOut();if(result.error){message(result.error.message);return;}user=null;cloudReady=false;window.wwmDataApi.render("account");};
+    const out=root.querySelector("#sign-out");if(out)out.onclick=async function(){const result=await client.auth.signOut();if(result.error){message(result.error.message);return;}user=null;cloudReady=false;cloudRevision=null;window.wwmDataApi.render("account");};
   };
   window.wwmCloudSave=function(payload){
     if(!client||!user||!cloudReady)return;
-    queue=queue.then(async function(){const result=await client.from("companion_state").upsert({user_id:user.id,schema_version:1,payload:payload},{onConflict:"user_id"});if(result.error)throw result.error;}).catch(function(error){console.error("Cloud sync failed",error);const state=document.querySelector("#save-state");if(state)state.textContent="● Erreur de synchronisation";});
+    const saveUserId=user.id;
+    queue=queue.then(async function(){
+      if(!user||user.id!==saveUserId||!cloudReady)return;
+      await saveSnapshot(payload,saveUserId);
+    }).catch(function(error){console.error("Cloud sync failed",error);const state=document.querySelector("#save-state");if(state)state.textContent="● Erreur de synchronisation";});
   };
   if(client){
     client.auth.getSession().then(function(result){user=result.data.session&&result.data.session.user||null;const state=document.querySelector("#save-state");if(state&&user)state.textContent="● Compte connecté";});
-    client.auth.onAuthStateChange(function(event,session){user=session&&session.user||null;if(event==="PASSWORD_RECOVERY")recoveryMode=true;if(event==="SIGNED_OUT"){recoveryMode=false;cloudReady=false;}else if(event==="SIGNED_IN"||event==="INITIAL_SESSION"){cloudReady=false;}const state=document.querySelector("#save-state");if(state)state.textContent=user?(cloudReady?"● Synchronisation activée":"● Compte connecté"):"● Sauvegarde locale";if(window.wwmDataApi&&window.wwmDataApi.getView()==="account")window.wwmDataApi.render("account");});
+    client.auth.onAuthStateChange(function(event,session){user=session&&session.user||null;if(event==="PASSWORD_RECOVERY")recoveryMode=true;if(event==="SIGNED_OUT"){recoveryMode=false;cloudReady=false;cloudRevision=null;}else if(event==="SIGNED_IN"||event==="INITIAL_SESSION"){cloudReady=false;cloudRevision=null;}const state=document.querySelector("#save-state");if(state)state.textContent=user?(cloudReady?"● Synchronisation activée":"● Compte connecté"):"● Sauvegarde locale";if(window.wwmDataApi&&window.wwmDataApi.getView()==="account")window.wwmDataApi.render("account");});
   }
 })();
