@@ -68,7 +68,7 @@ assert.ok(source.includes('client.rpc("save_companion_state"'), "the browser cli
 assert.equal(source.includes(".upsert("), false, "cloud snapshots must not use unconditional upserts");
 
 const serviceWorker = fs.readFileSync("where-winds-meet-companion/service-worker.js", "utf8");
-assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v22"'), "offline cache must be versioned after sync client changes");
+assert.ok(serviceWorker.includes('const CACHE="wwm-companion-v23"'), "offline cache must be versioned after sync client changes");
 
 const manifest = JSON.parse(fs.readFileSync("where-winds-meet-companion/manifest.webmanifest", "utf8"));
 assert.ok(manifest.icons.some(icon => icon.src === "./icon.svg" && icon.type === "image/svg+xml"), "PWA manifest must declare the companion icon");
@@ -160,6 +160,8 @@ assert.ok(appSource.includes("(b.strategy||'')+' '+(b.sourceLabel||'')"), "boss 
 assert.ok(appSource.includes("Encyclopédie du Jianghu"), "codex placeholder must be replaced by the real encyclopedia");
 assert.ok(appSource.includes("PLANIFICATEUR PERSONNEL"), "build view must expose the structured planner");
 assert.ok(appSource.includes("const buildTemplates=["), "build planner must provide sourced starter templates");
+assert.ok(appSource.includes("les modèles ne sont pas des tier lists officielles"), "build templates must be labelled as community suggestions rather than official rankings");
+
 assert.ok(appSource.includes("DPS saignement · Strategic Sword + Heavenquaker Spear"), "build planner must include the documented bleed template");
 assert.ok(appSource.includes("Soutien · Vernal Umbrella + Inkwell Fan"), "build planner must include a support template");
 assert.ok(appSource.includes("template.onchange"), "selecting a template must populate the structured build form");
