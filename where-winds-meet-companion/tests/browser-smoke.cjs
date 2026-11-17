@@ -32,6 +32,13 @@ const { chromium } = require("playwright");
   await page.locator('#nav [data-view="account"]').click();
   assert.ok((await page.locator("#view").innerText()).includes("Connexion cloud à configurer"), "unconfigured cloud account should be explained clearly");
 
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await mobile.goto("http://127.0.0.1:4173/index.html", { waitUntil: "domcontentloaded" });
+  await mobile.locator('#nav [data-view="codex"]').click();
+  const mobileWidth = await mobile.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+  assert.ok(mobileWidth.content <= mobileWidth.viewport + 1, "mobile layout should not introduce horizontal page overflow");
+  await mobile.close();
+
   assert.deepEqual(errors, [], "the application should not throw browser runtime errors");
   await browser.close();
   process.stdout.write("Browser smoke tests passed.\n");
