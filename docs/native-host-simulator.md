@@ -2,7 +2,7 @@
 
 ## Objectif et limites
 
-Cette cible exécute les vrais fichiers graphiques KGUI/KUI de KodeOS recompilés pour Linux. Elle ne simule pas le processeur ESP32-P4 et ne démarre pas les Active Objects ni le firmware complet. L'interface SDL2 est celle du simulateur KUI officiel du SDK.
+Cette cible exécute les vrais fichiers graphiques KGUI/KUI de KodeOS recompilés pour l'hôte (Linux et Windows). Elle ne simule pas le processeur ESP32-P4 et ne démarre pas les Active Objects ni le firmware complet. L'interface SDL2 est celle du simulateur KUI officiel du SDK.
 
 Les sources KodeOS et le SDK sont épinglés respectivement à :
 
@@ -13,7 +13,7 @@ Les sources KodeOS et le SDK sont épinglés respectivement à :
 
 Le profil hôte construit les écrans officiels Face, Launcher et Touch Test, à partir de leurs unités de traduction d'origine. Il conserve également les modules KGUI utilisés par ces écrans (`kgui_off.c`, `kgui_lvgl.c` et `kgui_rest.c`).
 
-`ports/native/kgui_sim_host.c` est un adaptateur d'initialisation propre à l'hôte : il crée les sujets LVGL attendus, appelle les constructeurs officiels et expose les trois écrans au lanceur KUI. Il ne redessine pas les écrans et ne remplace pas leur logique graphique.
+`ports/native/kgui_sim_host.c` est un adaptateur d'initialisation propre à l'hôte : il crée les sujets LVGL attendus, appelle les constructeurs officiels et expose les trois écrans au lanceur KUI. Il ne redessine pas les écrans et ne remplace pas leur logique graphique. Il reste portable : `localtime_r`/`localtime_s` et le format de date `%e` sont gérés par des chemins spécifiques à chaque plateforme.
 
 Loading et Settings ne sont pas encore exposés dans ce profil :
 - Loading dépend du système de packs, des ressources KGUI et du lecteur d'animation Kody/Lottie.
@@ -26,9 +26,9 @@ Ils seront réintégrés lorsque leurs dépendances auront un backend hôte rée
 Le workflow `Build native KGUI host simulator` :
 
 1. récupère KodeOS et son SDK aux révisions épinglées ;
-2. applique un petit profil CMake dans le checkout isolé ;
-3. construit le simulateur KUI officiel avec SDL2 ;
-4. produit un exécutable Linux téléchargeable comme artefact.
+2. applique un petit profil CMake dans le checkout isolé (`patches/native_host.py` adapte aussi le `setenv` du `main.c` amont pour la CRT Windows) ;
+3. construit le simulateur KUI officiel avec SDL2 sur Linux (gcc) et sur Windows (MinGW64 via MSYS2, Ninja) ;
+4. produit `kgui_sim` (Linux) et `kgui_sim.exe` accompagné de `SDL2.dll` (Windows) comme artefacts téléchargeables.
 
 La réussite de l'édition des liens ne suffit pas à valider le simulateur. Les critères de validation incluent l'exécution headless des trois écrans, la génération d'images PNG, et le contrôle des sujets exposés (`app_count`, `empty_text`, `tp_text`). Le rendu doit être comparé aux captures du même SDK et des mêmes sources KodeOS.
 

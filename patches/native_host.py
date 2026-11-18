@@ -48,4 +48,21 @@ new_includes = (
 if cmake.count(old_includes) != 1:
     raise SystemExit("Expected exactly one upstream include list")
 consumer_cmake.write_text(cmake.replace(old_includes, new_includes, 1))
+
+# The upstream snapshot mode switches SDL to its dummy driver with setenv(),
+# which the Windows CRT does not provide. Keep the upstream behaviour on POSIX
+# and use the CRT's _putenv_s on Windows.
+sim_main = sdk.parent / "components/kui/sim/main.c"
+main_src = sim_main.read_text()
+old_setenv = '(void)setenv("SDL_VIDEODRIVER", "dummy", 1);'
+new_setenv = (
+    "#if defined(_WIN32)\n"
+    "        (void)_putenv_s(\"SDL_VIDEODRIVER\", \"dummy\");\n"
+    "#else\n"
+    "        (void)setenv(\"SDL_VIDEODRIVER\", \"dummy\", 1);\n"
+    "#endif"
+)
+if main_src.count(old_setenv) != 1:
+    raise SystemExit("Expected exactly one SDL_VIDEODRIVER setenv in the upstream simulator main")
+sim_main.write_text(main_src.replace(old_setenv, new_setenv, 1))
 print("Prepared native host profile: official Face, Launcher and Touch Test screens.")

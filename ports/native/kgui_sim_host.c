@@ -25,12 +25,22 @@ static char tp_text[SUBJECT_TEXT_LEN], tp_prev[SUBJECT_TEXT_LEN];
 static int s_clock_minute = -1;
 static int s_clock_day = -1;
 
+/* Windows has localtime_s, POSIX has localtime_r; wrap both. */
+static struct tm *host_localtime(const time_t *now, struct tm *out)
+{
+#if defined(_WIN32)
+    return localtime_s(out, now) == 0 ? out : NULL;
+#else
+    return localtime_r(now, out);
+#endif
+}
+
 static void browser_clock_tick(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
     time_t now = time(NULL);
     struct tm local;
-    if (localtime_r(&now, &local) == NULL) return;
+    if (host_localtime(&now, &local) == NULL) return;
 
     if (s_clock_minute != local.tm_min) {
         kgui_screen_face_time(local.tm_hour, local.tm_min, false, false);
@@ -38,7 +48,13 @@ static void browser_clock_tick(lv_timer_t *timer)
     }
     if (s_clock_day != local.tm_yday) {
         char date[32];
-        if (strftime(date, sizeof(date), "%a %e %b", &local) > 0U) {
+#if defined(_WIN32)
+        /* MSVCRT's strftime has no %e (blank-padded day of month). */
+        const char *date_fmt = "%a %d %b";
+#else
+        const char *date_fmt = "%a %e %b";
+#endif
+        if (strftime(date, sizeof(date), date_fmt, &local) > 0U) {
             lv_obj_t *label = lv_obj_find_by_name(kgui_screen_face, "face_date");
             if (label != NULL) lv_label_set_text(label, date);
         }
@@ -113,7 +129,7 @@ void kgui_screens_init(void)
     /* This graphical host has no firmware clock or battery service. */
     time_t now = time(NULL);
     struct tm local;
-    if (localtime_r(&now, &local) != NULL) {
+    if (host_localtime(&now, &local) != NULL) {
         kgui_screen_face_time(local.tm_hour, local.tm_min, false, false);
     }
     kgui_screen_face_date(true);

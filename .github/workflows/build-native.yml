@@ -19,7 +19,15 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: windows-latest
+            name: windows
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout simulator project
         uses: actions/checkout@v4
@@ -42,25 +50,75 @@ jobs:
           echo "Actual SDK:   $actual"
           test "$actual" = "$expected"
 
-      - name: Install native SDL2 dependencies
+      - name: Install native SDL2 dependencies (Linux)
+        if: matrix.name == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install --yes build-essential cmake pkg-config libsdl2-dev
 
-      - name: Select official KGUI screens for native host profile
+      - name: Install native SDL2 dependencies (Windows, MinGW64)
+        if: matrix.name == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-libsdl2
+            mingw-w64-x86_64-pkgconf
+
+      - name: Select official KGUI screens for native host profile (Linux)
+        if: matrix.name == 'linux'
         run: python3 patches/native_host.py upstream/sdk "$GITHUB_WORKSPACE"
 
-      - name: Configure native KGUI simulator
+      - name: Select official KGUI screens for native host profile (Windows)
+        if: matrix.name == 'windows'
+        shell: msys2 {0}
+        run: python patches/native_host.py upstream/sdk "$(cygpath -m "$PWD")"
+
+      - name: Configure native KGUI simulator (Linux)
+        if: matrix.name == 'linux'
         run: |
           cmake -S upstream/components/kgui/sim -B build-native \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-      - name: Compile official KGUI simulator for Linux
+      - name: Configure native KGUI simulator (Windows)
+        if: matrix.name == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake -G Ninja -S upstream/components/kgui/sim -B build-native \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Compile official KGUI simulator (Linux)
+        if: matrix.name == 'linux'
         run: cmake --build build-native --parallel 2
 
-      - name: Upload native simulator executable
+      - name: Compile official KGUI simulator (Windows)
+        if: matrix.name == 'windows'
+        shell: msys2 {0}
+        run: cmake --build build-native --parallel 2
+
+      - name: Bundle the SDL2 runtime DLL (Windows)
+        if: matrix.name == 'windows'
+        shell: msys2 {0}
+        run: cp /mingw64/bin/SDL2.dll build-native/
+
+      - name: Upload native simulator executable (Linux)
+        if: matrix.name == 'linux'
         uses: actions/upload-artifact@v4
         with:
           name: kgui-native-linux
           path: build-native/kgui_sim
+          if-no-files-found: error
+
+      - name: Upload native simulator executable (Windows)
+        if: matrix.name == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kgui-native-windows
+          path: |
+            build-native/kgui_sim.exe
+            build-native/SDL2.dll
           if-no-files-found: error
